@@ -1,0 +1,1146 @@
+<title>洋服店レジ帳簿</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* Layout: one-screen register app — top bar with tabs, each view fills the rest; register = product grid + cart rail */
+:root {
+  --bg: #f2f4f8;
+  --surface: #ffffff;
+  --surface-2: #e8ecf4;
+  --line: #d3d9e6;
+  --fg: #1a2133;
+  --muted: #5b6479;
+  --accent: #284a91;
+  --accent-fg: #ffffff;
+  --accent-soft: #dfe7f8;
+  --good: #1d7a4b;
+  --good-soft: #ddf2e6;
+  --bad: #b3261e;
+  --bad-soft: #fbe2df;
+  --warn: #855600;
+  --warn-soft: #fbeed2;
+  --scrim: rgba(18, 24, 40, .55);
+  --font-ui: "IBM Plex Sans JP", "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
+  --font-num: "IBM Plex Mono", ui-monospace, "SF Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #10141e; --surface: #1a2030; --surface-2: #242c40; --line: #343e57;
+    --fg: #e8ebf3; --muted: #9ba4b9; --accent: #91b1f6; --accent-fg: #0c1427; --accent-soft: #233359;
+    --good: #72d6a3; --good-soft: #15392a; --bad: #ff8d84; --bad-soft: #47211e;
+    --warn: #f1c263; --warn-soft: #3c2e12; --scrim: rgba(0, 0, 0, .65);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #10141e; --surface: #1a2030; --surface-2: #242c40; --line: #343e57;
+  --fg: #e8ebf3; --muted: #9ba4b9; --accent: #91b1f6; --accent-fg: #0c1427; --accent-soft: #233359;
+  --good: #72d6a3; --good-soft: #15392a; --bad: #ff8d84; --bad-soft: #47211e;
+  --warn: #f1c263; --warn-soft: #3c2e12; --scrim: rgba(0, 0, 0, .65);
+  color-scheme: dark;
+}
+
+[hidden] { display: none !important; }
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font-family: var(--font-ui); font-size: 15px; line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+h2 { font-size: 17px; font-weight: 700; }
+h3 { font-size: 16px; font-weight: 700; }
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+button, input, select { font: inherit; color: inherit; }
+button {
+  cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  user-select: none; -webkit-user-select: none; border: 0; background: none;
+}
+button:disabled { cursor: not-allowed; opacity: .4; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 48px; padding: 0 20px; border-radius: 10px; font-weight: 700;
+  border: 1px solid var(--line); background: var(--surface);
+  transition: transform .06s, background-color .12s;
+}
+.btn:active:not(:disabled) { transform: scale(.97); }
+.btn.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+.btn.ghost { background: transparent; }
+.btn.sm { min-height: 40px; padding: 0 14px; font-size: 14px; }
+.btn.xl { min-height: 64px; font-size: 19px; width: 100%; }
+.btn.danger { background: var(--bad); color: var(--surface); border-color: var(--bad); }
+
+input[type="text"], input[type="search"], select, .inp {
+  min-height: 48px; padding: 0 12px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--surface); width: 100%;
+}
+
+/* ---------- app frame ---------- */
+.app { display: flex; flex-direction: column; height: 100%; }
+.bar {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 8px; background: var(--surface); border-bottom: 1px solid var(--line);
+}
+.brand { display: flex; align-items: baseline; gap: 10px; }
+.brand h1 { font-size: 18px; letter-spacing: .04em; }
+.mock-chip {
+  font-size: 12px; font-weight: 500; padding: 2px 8px; border-radius: 999px;
+  background: var(--warn-soft); color: var(--warn); letter-spacing: .04em;
+}
+.tabs { display: flex; gap: 4px; overflow-x: auto; flex: 1; min-width: 0; }
+.tab {
+  min-height: 44px; padding: 0 16px; border-radius: 10px; font-weight: 700; color: var(--muted);
+  white-space: nowrap;
+}
+.tab[aria-selected="true"] { background: var(--accent-soft); color: var(--accent); }
+.clock { color: var(--muted); font-size: 14px; white-space: nowrap; }
+
+main { flex: 1; min-height: 0; }
+.view {
+  height: 100%; overflow: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px;
+}
+
+/* ---------- register ---------- */
+.reg { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; overflow: hidden; }
+.reg-left { display: flex; flex-direction: column; gap: 12px; min-height: 0; min-width: 0; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip {
+  min-height: 44px; padding: 0 18px; border-radius: 999px; font-weight: 500;
+  background: var(--surface); border: 1px solid var(--line);
+}
+.chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.pgrid {
+  flex: 1; overflow: auto; min-height: 0; align-content: start;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px;
+  padding-bottom: 8px;
+}
+.pcard {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left;
+  min-height: 132px; padding: 14px; border-radius: 12px;
+  background: var(--surface); border: 1px solid var(--line);
+  transition: transform .06s, border-color .12s;
+}
+.pcard:active { transform: scale(.97); border-color: var(--accent); }
+.pcat { font-size: 12px; color: var(--muted); letter-spacing: .04em; }
+.pname { font-weight: 700; line-height: 1.35; flex: 1; }
+.pprice { font-family: var(--font-num); font-size: 20px; font-weight: 600; }
+.pstock { font-size: 12px; color: var(--muted); }
+.pstock.out { color: var(--warn); font-weight: 700; }
+
+.cart {
+  display: flex; flex-direction: column; gap: 12px; min-height: 0;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px;
+}
+.cart-head { display: flex; justify-content: space-between; align-items: center; }
+.cart-list { list-style: none; margin: 0; padding: 0; flex: 1; overflow: auto; min-height: 80px; }
+.cline {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px;
+  padding-block: 10px; border-bottom: 1px solid var(--line);
+}
+.cline b { display: block; font-size: 15px; }
+.cinfo { min-width: 0; }
+.cinfo span { color: var(--muted); font-size: 13px; }
+.cline-amt { text-align: right; font-family: var(--font-num); font-weight: 600; font-size: 17px; align-self: center; }
+.qty { display: flex; align-items: center; gap: 4px; grid-column: 1 / -1; }
+.qty button {
+  width: 44px; height: 40px; border-radius: 8px; background: var(--surface-2); font-size: 20px; font-weight: 700;
+}
+.qty button:active { background: var(--accent-soft); }
+.qty span { min-width: 36px; text-align: center; font-family: var(--font-num); font-size: 17px; }
+.cempty { color: var(--muted); text-align: center; padding: 32px 8px; font-size: 14px; }
+.cart-sum { display: grid; gap: 4px; border-top: 2px solid var(--fg); padding-top: 10px; }
+.srow { display: flex; justify-content: space-between; align-items: baseline; color: var(--muted); font-size: 14px; }
+.srow.total { color: var(--fg); font-size: 15px; font-weight: 700; }
+.srow.total .num { font-size: 34px; font-weight: 600; }
+
+/* ---------- overlays ---------- */
+.overlay {
+  position: fixed; inset: 0; z-index: 50; background: var(--scrim);
+  display: flex; align-items: center; justify-content: center; overflow: auto;
+  padding-top: max(16px, env(safe-area-inset-top, 0px));
+  padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.sheet {
+  background: var(--bg); border-radius: 18px; padding: 20px; width: 100%;
+  margin: auto; box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
+}
+
+.pay { max-width: 1000px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+.pay-display { display: flex; flex-direction: column; gap: 12px; }
+.drow {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px;
+  padding: 14px 20px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line);
+}
+.drow .lbl { font-weight: 700; font-size: 16px; color: var(--muted); }
+.drow .amt {
+  text-align: right; font-family: var(--font-num); font-variant-numeric: tabular-nums; font-weight: 600;
+  font-size: 34px; overflow-wrap: anywhere;
+}
+.drow .amt.big { font-size: clamp(44px, 6.4vw, 72px); line-height: 1.1; }
+.drow.recv { border: 3px solid var(--accent); }
+.drow.recv .lbl { color: var(--accent); }
+.drow.chg.ok { background: var(--good-soft); border-color: var(--good); }
+.drow.chg.ok .lbl, .drow.chg.ok .amt { color: var(--good); }
+.drow.chg.short { background: var(--bad-soft); border-color: var(--bad); }
+.drow.chg.short .lbl, .drow.chg.short .amt { color: var(--bad); }
+.drow.chg.idle .amt { color: var(--muted); }
+.pay-note { color: var(--muted); font-size: 13px; margin: 0; }
+
+.pad { display: flex; flex-direction: column; gap: 10px; }
+.quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.qk {
+  min-height: 60px; border-radius: 12px; font-weight: 700; font-size: 17px;
+  background: var(--accent-soft); color: var(--accent);
+}
+.qk:active { transform: scale(.96); }
+.keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.key {
+  min-height: 78px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line);
+  font-family: var(--font-num); font-size: 34px; font-weight: 600;
+  transition: transform .06s, background-color .1s;
+}
+.key:active { transform: scale(.96); background: var(--accent-soft); }
+.key.fn { font-family: var(--font-ui); font-size: 22px; color: var(--muted); }
+.pay-foot { grid-column: 1 / -1; display: flex; gap: 10px; }
+.pay-foot .btn { min-height: 68px; font-size: 18px; }
+.pay-foot .confirm { flex: 1; font-size: 21px; }
+
+.done { max-width: 560px; text-align: center; display: flex; flex-direction: column; gap: 16px; }
+.done-lbl { font-size: 20px; font-weight: 700; color: var(--good); }
+.done-amt { font-family: var(--font-num); font-weight: 600; font-size: clamp(64px, 13vw, 120px); line-height: 1; color: var(--good); }
+.done-sub { display: flex; justify-content: center; gap: 24px; color: var(--muted); flex-wrap: wrap; }
+
+.variant { max-width: 640px; display: flex; flex-direction: column; gap: 16px; }
+.vhead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.vprice { font-family: var(--font-num); font-size: 20px; font-weight: 600; }
+.vtable-wrap { overflow-x: auto; }
+.vtable { border-collapse: separate; border-spacing: 8px; margin: -8px; }
+.vtable th { font-size: 14px; color: var(--muted); font-weight: 700; text-align: left; padding-right: 4px; white-space: nowrap; }
+.vtable thead th { text-align: center; }
+.vbtn {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-width: 96px; min-height: 72px; border-radius: 12px; background: var(--surface); border: 2px solid var(--line);
+}
+.vbtn span { font-size: 20px; font-weight: 700; }
+.vbtn small { font-size: 12px; color: var(--muted); }
+.vbtn:active { border-color: var(--accent); background: var(--accent-soft); }
+.vbtn.zero { border-style: dashed; }
+.vbtn.zero small { color: var(--warn); font-weight: 700; }
+
+.toast {
+  position: fixed; z-index: 80; left: 50%; transform: translateX(-50%);
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  max-width: calc(100% - 32px); padding: 14px 20px; border-radius: 12px;
+  background: var(--fg); color: var(--bg); font-weight: 500; box-shadow: 0 8px 24px rgba(0, 0, 0, .25);
+}
+.toast.warn { background: var(--warn); color: var(--surface); }
+
+/* ---------- shared panels ---------- */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.hint { margin: 0; color: var(--muted); font-size: 13px; }
+.toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.toolbar .spacer { flex: 1; }
+.navbtn { width: 48px; height: 48px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); font-size: 20px; font-weight: 700; }
+.period { font-size: 19px; font-weight: 700; min-width: 9em; text-align: center; }
+.badge { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.badge.warn { background: var(--warn-soft); color: var(--warn); }
+.badge.bad { background: var(--bad-soft); color: var(--bad); }
+.badge.good { background: var(--good-soft); color: var(--good); }
+.tbl-wrap { overflow-x: auto; }
+table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tbl th { text-align: left; font-size: 12px; letter-spacing: .04em; color: var(--muted); font-weight: 700; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.tbl td { padding: 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.tbl .r { text-align: right; font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+.tbl tr.muted td { color: var(--muted); }
+.tbl tfoot td { font-weight: 700; border-top: 2px solid var(--fg); border-bottom: 0; }
+.seg { display: inline-flex; background: var(--surface-2); border-radius: 12px; padding: 4px; }
+.seg button { min-height: 40px; padding: 0 18px; border-radius: 9px; font-weight: 700; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
+
+/* ---------- history ---------- */
+.hist-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 16px; align-items: start; }
+.daysum { display: flex; gap: 20px; flex-wrap: wrap; color: var(--muted); font-size: 14px; }
+.daysum b { color: var(--fg); font-family: var(--font-num); font-size: 17px; margin-left: 6px; }
+.hlist { display: flex; flex-direction: column; gap: 8px; }
+.hrow {
+  display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 12px; align-items: center; text-align: left;
+  min-height: 64px; padding: 10px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line);
+}
+.hrow[aria-pressed="true"] { border: 2px solid var(--accent); background: var(--accent-soft); }
+.hrow .t { font-family: var(--font-num); font-size: 17px; font-weight: 600; }
+.hrow .s { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hrow .a { font-family: var(--font-num); font-size: 17px; font-weight: 600; text-align: right; }
+.hrow .a .badge { display: block; margin-top: 2px; font-family: var(--font-ui); }
+.empty { padding: 40px 16px; text-align: center; color: var(--muted); background: var(--surface); border: 1px dashed var(--line); border-radius: 14px; }
+.ditem { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding-block: 10px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.ditem input { width: 26px; height: 26px; accent-color: var(--accent); }
+.ditem .nm span { display: block; color: var(--muted); font-size: 13px; }
+.ditem .am { font-family: var(--font-num); font-weight: 600; }
+.ditem.returned { cursor: default; }
+.ditem.returned .nm b, .ditem.returned .am { text-decoration: line-through; color: var(--muted); }
+.ditem .ph { width: 26px; }
+dl.dsum { display: grid; grid-template-columns: 1fr auto; gap: 6px 16px; margin: 0; }
+dl.dsum dt { color: var(--muted); }
+dl.dsum dd { margin: 0; text-align: right; font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+dl.dsum .big { font-size: 22px; font-weight: 600; color: var(--fg); }
+.confirm-box { border: 2px solid var(--bad); background: var(--bad-soft); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.confirm-box p { margin: 0; }
+.confirm-box .row { display: flex; gap: 10px; flex-wrap: wrap; }
+.refund-line { display: flex; justify-content: space-between; color: var(--bad); font-size: 14px; }
+
+/* ---------- close ---------- */
+.close-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.close-left { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.yen-field { display: flex; align-items: center; gap: 8px; }
+.yen-field span { font-size: 22px; font-weight: 700; color: var(--muted); }
+.yen-field input { font-family: var(--font-num); font-size: 26px; font-weight: 600; text-align: right; min-height: 60px; max-width: 260px; }
+table.denoms { width: 100%; border-collapse: collapse; }
+.denoms td { padding: 6px 4px; border-bottom: 1px solid var(--line); }
+.denoms .dn { font-weight: 700; white-space: nowrap; }
+.denoms .st { text-align: right; font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 16px; white-space: nowrap; }
+.stepper { display: flex; align-items: center; gap: 4px; justify-content: center; }
+.stepper button { width: 44px; height: 44px; border-radius: 8px; background: var(--surface-2); font-size: 20px; font-weight: 700; }
+.stepper button:active { background: var(--accent-soft); }
+.stepper input { width: 64px; min-height: 44px; text-align: center; font-family: var(--font-num); font-size: 18px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); }
+.denom-total { display: flex; justify-content: space-between; align-items: baseline; font-weight: 700; padding-top: 4px; }
+.denom-total .num { font-size: 26px; }
+.close-sum { position: sticky; top: 0; }
+.eq { display: grid; grid-template-columns: 1.5em minmax(0, 1fr) auto; gap: 6px 8px; align-items: baseline; }
+.eq .op { color: var(--muted); font-weight: 700; text-align: center; }
+.eq .v { font-family: var(--font-num); font-variant-numeric: tabular-nums; text-align: right; font-size: 17px; }
+.eq .line { grid-column: 1 / -1; border-top: 2px solid var(--fg); }
+.eq .strong { font-weight: 700; }
+.eq .v.strong { font-size: 22px; }
+.diff { border-radius: 14px; padding: 16px; text-align: center; display: flex; flex-direction: column; gap: 2px; }
+.diff .dl { font-weight: 700; font-size: 16px; }
+.diff .dv { font-family: var(--font-num); font-size: 40px; font-weight: 600; line-height: 1.15; }
+.diff.good { background: var(--good-soft); color: var(--good); }
+.diff.bad { background: var(--bad-soft); color: var(--bad); }
+.diff.warn { background: var(--warn-soft); color: var(--warn); }
+
+/* ---------- ledger ---------- */
+.tiles { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; min-width: 0; }
+.tile .k { font-size: 12px; color: var(--muted); letter-spacing: .04em; font-weight: 700; }
+.tile .v { font-family: var(--font-num); font-size: 22px; font-weight: 600; overflow-wrap: anywhere; }
+.tile.main { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.tile.main .k { color: var(--accent-fg); opacity: .85; }
+.ledger-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.bar-cell { width: 100%; min-width: 80px; }
+.bar-track { height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.bar-fill { height: 100%; background: var(--accent); border-radius: 4px; }
+
+/* ---------- products admin ---------- */
+.admin-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.admin-left { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.tbl tbody tr.sel td { background: var(--accent-soft); }
+.tbl tbody tr.click { cursor: pointer; }
+.form { display: grid; gap: 14px; }
+.form label { display: grid; gap: 4px; font-weight: 700; font-size: 14px; }
+.form .help { font-weight: 400; color: var(--muted); font-size: 13px; }
+.form .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form input.yen { font-family: var(--font-num); text-align: right; font-size: 18px; }
+.stock-grid input { width: 72px; min-height: 44px; text-align: center; font-family: var(--font-num); font-size: 17px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); }
+.stock-grid td, .stock-grid th { padding: 4px 6px; }
+.form-foot { display: flex; gap: 10px; }
+.form-foot .btn.primary { flex: 1; }
+.catlist { display: flex; flex-wrap: wrap; gap: 8px; }
+.catlist .chip { min-height: 40px; }
+.addcat { display: flex; gap: 8px; }
+
+/* ---------- responsive ---------- */
+@media (max-width: 900px) {
+  .reg { display: flex; flex-direction: column; overflow: auto; }
+  .pgrid { flex: none; overflow: visible; }
+  .cart { flex: none; }
+  .cart-list { flex: none; overflow: visible; }
+  .hist-body, .close-grid, .ledger-grid, .admin-grid { grid-template-columns: minmax(0, 1fr); }
+  .close-sum { position: static; }
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tile.main { grid-column: 1 / -1; }
+}
+@media (max-width: 760px) {
+  .pay { grid-template-columns: minmax(0, 1fr); }
+  .key { min-height: 64px; font-size: 28px; }
+  .qk { min-height: 52px; font-size: 15px; }
+  .clock { display: none; }
+}
+@media (max-width: 480px) {
+  .quick { grid-template-columns: repeat(2, 1fr); }
+  .pgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .form .two { grid-template-columns: minmax(0, 1fr); }
+  .pay-foot { flex-wrap: wrap; }
+  .pay-foot .confirm { flex-basis: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+</style>
+
+<div class="app">
+  <header class="bar">
+    <div class="brand"><h1>レジ帳簿</h1><span class="mock-chip">モック・サンプルデータ</span></div>
+    <nav class="tabs" role="tablist" aria-label="画面切り替え">
+      <button class="tab" role="tab" data-act="view" data-v="reg" aria-selected="true">会計</button>
+      <button class="tab" role="tab" data-act="view" data-v="admin" aria-selected="false">商品管理</button>
+      <button class="tab" role="tab" data-act="view" data-v="hist" aria-selected="false">会計履歴</button>
+      <button class="tab" role="tab" data-act="view" data-v="close" aria-selected="false">レジ締め</button>
+      <button class="tab" role="tab" data-act="view" data-v="ledger" aria-selected="false">帳簿</button>
+    </nav>
+    <div class="clock num" id="clock"></div>
+  </header>
+
+  <main>
+    <!-- 会計 -->
+    <section class="view reg" id="v-reg">
+      <div class="reg-left">
+        <div class="chips" id="catChips"></div>
+        <div class="pgrid" id="pgrid"></div>
+      </div>
+      <aside class="cart" aria-label="お会計">
+        <div class="cart-head"><h2>お会計</h2><button class="btn ghost sm" data-act="cart-clear">すべて取り消す</button></div>
+        <ul class="cart-list" id="cartList"></ul>
+        <div class="cart-sum" id="cartSum"></div>
+        <button class="btn primary xl" id="toPay" data-act="pay-open">お預かり金額を入力</button>
+      </aside>
+    </section>
+
+    <!-- 商品管理 -->
+    <section class="view" id="v-admin" hidden>
+      <div class="admin-grid">
+        <div class="admin-left">
+          <div class="panel">
+            <div class="toolbar" style="margin:0">
+              <input type="search" id="adminQuery" placeholder="商品名で探す" aria-label="商品名で探す" style="flex:1;min-width:160px">
+              <select id="adminCat" aria-label="カテゴリーで絞り込み" style="width:auto"></select>
+              <button class="btn primary" data-act="admin-new">＋ 商品を追加</button>
+            </div>
+            <div class="tbl-wrap"><table class="tbl" id="adminTable"></table></div>
+          </div>
+          <div class="panel">
+            <h2>カテゴリー</h2>
+            <div class="catlist" id="catList"></div>
+            <div class="addcat">
+              <input type="text" id="newCat" placeholder="新しいカテゴリー名" aria-label="新しいカテゴリー名">
+              <button class="btn" data-act="cat-add">追加</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel" id="adminForm"></div>
+      </div>
+    </section>
+
+    <!-- 会計履歴 -->
+    <section class="view" id="v-hist" hidden>
+      <div class="toolbar">
+        <button class="navbtn" data-act="hist-day" data-v="-1" aria-label="前の日">‹</button>
+        <div class="period" id="histDate"></div>
+        <button class="navbtn" data-act="hist-day" data-v="1" aria-label="次の日">›</button>
+        <button class="btn sm" data-act="hist-today">今日</button>
+        <div class="spacer"></div>
+        <div class="daysum" id="histSum"></div>
+      </div>
+      <div class="hist-body">
+        <div class="hlist" id="histList"></div>
+        <div id="histDetail"></div>
+      </div>
+    </section>
+
+    <!-- レジ締め -->
+    <section class="view" id="v-close" hidden>
+      <div class="close-grid">
+        <div class="close-left">
+          <div class="panel">
+            <h2>開店時の釣り銭準備金</h2>
+            <div class="yen-field"><span>¥</span><input class="inp" type="text" id="float" inputmode="numeric" aria-label="釣り銭準備金"></div>
+            <p class="hint">朝、レジに入れたお釣り用の現金です。</p>
+          </div>
+          <div class="panel">
+            <h2>閉店時に数えた現金</h2>
+            <p class="hint">お札・硬貨ごとの枚数を入れると、合計が自動で出ます。</p>
+            <div class="tbl-wrap"><table class="denoms" id="denoms"></table></div>
+            <div class="denom-total"><span>数えた現金の合計</span><span class="num" id="countTotal"></span></div>
+          </div>
+        </div>
+        <div class="panel close-sum" id="closeSum"></div>
+      </div>
+    </section>
+
+    <!-- 帳簿 -->
+    <section class="view" id="v-ledger" hidden>
+      <div class="toolbar">
+        <div class="seg" role="group" aria-label="集計の単位">
+          <button data-act="ledger-mode" data-v="day" aria-pressed="true">日別</button>
+          <button data-act="ledger-mode" data-v="month" aria-pressed="false">月別</button>
+        </div>
+        <button class="navbtn" data-act="ledger-move" data-v="-1" aria-label="前の期間">‹</button>
+        <div class="period" id="ledgerPeriod"></div>
+        <button class="navbtn" data-act="ledger-move" data-v="1" aria-label="次の期間">›</button>
+        <div class="spacer"></div>
+        <button class="btn primary" data-act="excel">Excel をダウンロード</button>
+      </div>
+      <div class="tiles" id="ledgerTiles"></div>
+      <div class="ledger-grid">
+        <div class="panel"><h2 id="ledgerTblTitle">日別の売上</h2><div class="tbl-wrap"><table class="tbl" id="ledgerTable"></table></div></div>
+        <div class="panel"><h2>カテゴリー別の売上</h2><div class="tbl-wrap"><table class="tbl" id="catTable"></table></div></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- サイズ・色を選ぶ -->
+<div class="overlay" id="variant" hidden role="dialog" aria-modal="true" aria-labelledby="vTitle">
+  <div class="sheet variant">
+    <div class="vhead">
+      <div><h2 id="vTitle"></h2><div class="vprice" id="vPrice"></div></div>
+      <button class="btn sm" data-act="close-ov">閉じる</button>
+    </div>
+    <p class="hint">色とサイズを選ぶと、お会計に追加されます。</p>
+    <div class="vtable-wrap"><table class="vtable" id="vTable"></table></div>
+  </div>
+</div>
+
+<!-- お預かり金額の入力 -->
+<div class="overlay" id="pay" hidden role="dialog" aria-modal="true" aria-labelledby="payTitle">
+  <div class="sheet pay">
+    <div class="pay-display">
+      <h2 id="payTitle">お預かり金額の入力</h2>
+      <div class="drow"><span class="lbl">お会計<br><small>(税込)</small></span><span class="amt" id="pTotal"></span></div>
+      <div class="drow recv"><span class="lbl">お預かり</span><span class="amt big" id="pRecv"></span></div>
+      <div class="drow chg idle" id="pChgRow"><span class="lbl" id="pChgLbl">お釣り</span><span class="amt big" id="pChg"></span></div>
+      <p class="pay-note">PC ではキーボードの数字キーでも入力できます(Enter で確定、Esc で戻る)。</p>
+    </div>
+    <div class="pad">
+      <div class="quick">
+        <button class="qk" data-act="exact">ちょうど</button>
+        <button class="qk" data-act="addbill" data-v="1000">＋1,000</button>
+        <button class="qk" data-act="addbill" data-v="5000">＋5,000</button>
+        <button class="qk" data-act="addbill" data-v="10000">＋10,000</button>
+      </div>
+      <div class="keys">
+        <button class="key" data-act="key" data-v="7">7</button>
+        <button class="key" data-act="key" data-v="8">8</button>
+        <button class="key" data-act="key" data-v="9">9</button>
+        <button class="key" data-act="key" data-v="4">4</button>
+        <button class="key" data-act="key" data-v="5">5</button>
+        <button class="key" data-act="key" data-v="6">6</button>
+        <button class="key" data-act="key" data-v="1">1</button>
+        <button class="key" data-act="key" data-v="2">2</button>
+        <button class="key" data-act="key" data-v="3">3</button>
+        <button class="key" data-act="key" data-v="0">0</button>
+        <button class="key" data-act="key" data-v="00">00</button>
+        <button class="key fn" data-act="back" aria-label="1文字消す">⌫</button>
+      </div>
+    </div>
+    <div class="pay-foot">
+      <button class="btn" data-act="close-ov">戻る</button>
+      <button class="btn" data-act="recv-clear">クリア</button>
+      <button class="btn primary confirm" id="payConfirm" data-act="pay-confirm">会計を確定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 会計完了 -->
+<div class="overlay" id="done" hidden role="dialog" aria-modal="true" aria-labelledby="doneLbl">
+  <div class="sheet done">
+    <div class="done-lbl" id="doneLbl">お釣り</div>
+    <div class="done-amt" id="doneChg"></div>
+    <div class="done-sub" id="doneSub"></div>
+    <button class="btn primary xl" data-act="close-ov">次のお客様へ</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script>
+(() => {
+  const TAX = 10;
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const yen = n => '¥' + Math.round(n).toLocaleString('ja-JP');
+  // 税込金額から内税を出す(1円未満切り捨て)
+  const taxOf = t => Math.floor(t * TAX / (100 + TAX));
+  const WD = ['日', '月', '火', '水', '木', '金', '土'];
+  const pad2 = n => String(n).padStart(2, '0');
+  const keyOf = d => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+  const parseKey = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
+  const sizeLabel = s => s === 'F' ? 'フリー' : s;
+  function rng(seed) {
+    let a = seed >>> 0;
+    return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  }
+
+  // ---------- サンプルデータ ----------
+  const categories = ['トップス', 'ボトムス', 'アウター', 'ワンピース', '小物'];
+  let nextId = 14;
+  const products = [
+    { id: 1, name: 'オックスフォードシャツ', cat: 'トップス', price: 6980, cost: 2800, sizes: ['S', 'M', 'L'], colors: ['白', 'サックス'], stock: [[2, 3, 1], [1, 2, 0]] },
+    { id: 2, name: 'ボーダー長袖Tシャツ', cat: 'トップス', price: 4290, cost: 1600, sizes: ['S', 'M', 'L'], colors: ['紺×白', '赤×白'], stock: [[3, 4, 2], [0, 1, 1]] },
+    { id: 3, name: 'ウールクルーネックニット', cat: 'トップス', price: 8900, cost: 3600, sizes: ['M', 'L'], colors: ['グレー', '生成り', '黒'], stock: [[2, 1], [1, 0], [2, 2]] },
+    { id: 4, name: 'ワイドチノパンツ', cat: 'ボトムス', price: 7980, cost: 3200, sizes: ['S', 'M', 'L'], colors: ['ベージュ', '黒'], stock: [[1, 2, 2], [2, 1, 0]] },
+    { id: 5, name: 'ストレートデニム', cat: 'ボトムス', price: 9800, cost: 4100, sizes: ['W28', 'W30', 'W32'], colors: ['インディゴ', 'ブラック'], stock: [[1, 3, 2], [1, 1, 1]] },
+    { id: 6, name: 'フレアスカート', cat: 'ボトムス', price: 6600, cost: 2500, sizes: ['S', 'M'], colors: ['モカ', '黒'], stock: [[2, 1], [0, 1]] },
+    { id: 7, name: 'ステンカラーコート', cat: 'アウター', price: 19800, cost: 8200, sizes: ['M', 'L'], colors: ['ベージュ', 'ネイビー'], stock: [[1, 1], [1, 0]] },
+    { id: 8, name: 'キルティングジャケット', cat: 'アウター', price: 14300, cost: 5900, sizes: ['S', 'M', 'L'], colors: ['黒', 'カーキ'], stock: [[0, 1, 1], [1, 1, 0]] },
+    { id: 9, name: 'リネンシャツワンピース', cat: 'ワンピース', price: 12100, cost: 4800, sizes: ['F'], colors: ['白', '黒', 'ネイビー'], stock: [[2], [1], [0]] },
+    { id: 10, name: 'ニットワンピース', cat: 'ワンピース', price: 11000, cost: 4400, sizes: ['M'], colors: ['グレー', 'ブラウン'], stock: [[1], [2]] },
+    { id: 11, name: 'レザーベルト', cat: '小物', price: 3850, cost: 1400, sizes: ['F'], colors: ['黒', '茶'], stock: [[4], [3]] },
+    { id: 12, name: 'コットンソックス', cat: '小物', price: 990, cost: 300, sizes: ['F'], colors: ['白', '黒', 'グレー'], stock: [[10], [8], [6]] },
+    { id: 13, name: 'キャンバストート', cat: '小物', price: 3300, cost: 1200, sizes: ['F'], colors: ['生成り'], stock: [[0]] },
+  ];
+  const byId = id => products.find(p => p.id === id);
+  const totalStock = p => p.stock.flat().reduce((a, b) => a + b, 0);
+
+  const now = new Date();
+  const todayKey = keyOf(now);
+  const history = [];
+  const refunds = []; // {date, time, amount, txId}
+
+  function makeItem(p, ci, si, qty = 1) {
+    return { pid: p.id, name: p.name, cat: p.cat, color: p.colors[ci], size: p.sizes[si], ci, si, qty, price: p.price, returned: false };
+  }
+  function pickReceived(total, r) {
+    const x = r();
+    if (x < 0.3) return total;
+    if (x < 0.65) return Math.ceil(total / 1000) * 1000;
+    if (x < 0.85) return Math.ceil(total / 5000) * 5000;
+    return Math.ceil(total / 10000) * 10000;
+  }
+  (function seedHistory() {
+    const r = rng(42);
+    const times = ['11:12', '11:48', '12:35', '13:20', '14:05', '15:42', '16:30', '17:15', '18:02'];
+    const nowHM = `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+    for (let off = 0; off < 3; off++) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - off);
+      const key = keyOf(d);
+      let ts = off === 0 ? times.filter(t => t < nowHM) : times.slice(0, 7);
+      if (ts.length < 3) ts = times.slice(0, 3);
+      ts.forEach((time, i) => {
+        const n = r() < 0.6 ? 1 : 2;
+        const items = [];
+        for (let k = 0; k < n; k++) {
+          const p = products[Math.floor(r() * 12)];
+          items.push(makeItem(p, Math.floor(r() * p.colors.length), Math.floor(r() * p.sizes.length)));
+        }
+        const total = items.reduce((a, it) => a + it.price * it.qty, 0);
+        const recv = pickReceived(total, r);
+        history.push({ id: `${pad2(d.getMonth() + 1)}${pad2(d.getDate())}-${pad2(i + 1)}`, date: key, time, items, total, tax: taxOf(total), recv, change: recv - total });
+      });
+    }
+    // 昨日の会計の1点を返品済みにしておく
+    const yKey = keyOf(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1));
+    const t = history.find(h => h.date === yKey && h.items.length > 1) || history.find(h => h.date === yKey);
+    if (t) { t.items[0].returned = true; refunds.push({ date: yKey, time: '18:40', amount: t.items[0].price * t.items[0].qty, txId: t.id }); }
+  })();
+
+  // ---------- 状態 ----------
+  const state = {
+    view: 'reg', cat: 'すべて', cart: [], recv: '', vp: null,
+    histDate: todayKey, histSel: null, retSel: new Set(), retConfirm: false,
+    ledgerMode: 'day', ly: now.getFullYear(), lm: now.getMonth() + 1,
+    adminSel: 1, adminCat: 'すべて', adminQuery: '', draft: null,
+    float: 30000, counts: {},
+  };
+  const DENOMS = [
+    [10000, '1万円札'], [5000, '5千円札'], [2000, '2千円札'], [1000, '千円札'],
+    [500, '500円玉'], [100, '100円玉'], [50, '50円玉'], [10, '10円玉'], [5, '5円玉'], [1, '1円玉'],
+  ];
+
+  // ---------- 共通 ----------
+  let toastTimer;
+  function toast(msg, warn) {
+    const t = $('#toast');
+    t.textContent = msg; t.className = 'toast' + (warn ? ' warn' : ''); t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, warn ? 3200 : 1800);
+  }
+  function openOv(id) { $(id).hidden = false; }
+  function closeOv() { document.querySelectorAll('.overlay').forEach(o => { o.hidden = true; }); }
+  function tick() {
+    const d = new Date();
+    $('#clock').textContent = `${d.getMonth() + 1}月${d.getDate()}日(${WD[d.getDay()]}) ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  }
+  function setView(v) {
+    state.view = v;
+    document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.v === v)));
+    ['reg', 'admin', 'hist', 'close', 'ledger'].forEach(n => { $('#v-' + n).hidden = n !== v; });
+    ({ reg: renderReg, admin: renderAdmin, hist: renderHist, close: renderClose, ledger: renderLedger })[v]();
+  }
+
+  // ---------- 会計 ----------
+  const cartTotal = () => state.cart.reduce((a, l) => a + l.price * l.qty, 0);
+  function renderReg() { renderCats(); renderGrid(); renderCart(); }
+  function renderCats() {
+    $('#catChips').innerHTML = ['すべて', ...categories].map(c =>
+      `<button class="chip" data-act="cat" data-v="${esc(c)}" aria-pressed="${state.cat === c}">${esc(c)}</button>`).join('');
+  }
+  function renderGrid() {
+    const list = products.filter(p => state.cat === 'すべて' || p.cat === state.cat);
+    $('#pgrid').innerHTML = list.map(p => {
+      const s = totalStock(p);
+      return `<button class="pcard" data-act="pick" data-id="${p.id}">
+        <span class="pcat">${esc(p.cat)}</span><span class="pname">${esc(p.name)}</span>
+        <span class="pprice">${yen(p.price)}</span>
+        <span class="pstock ${s ? '' : 'out'}">${s ? '在庫 ' + s : '在庫なし'}</span></button>`;
+    }).join('') || '<div class="empty">このカテゴリーの商品はまだありません</div>';
+  }
+  function renderCart() {
+    const L = state.cart;
+    $('#cartList').innerHTML = L.length ? L.map((l, i) => `
+      <li class="cline">
+        <div class="cinfo"><b>${esc(l.name)}</b><span>${esc(l.color)} / ${esc(sizeLabel(l.size))}・${yen(l.price)}</span></div>
+        <div class="cline-amt">${yen(l.price * l.qty)}</div>
+        <div class="qty">
+          <button data-act="dec" data-i="${i}" aria-label="1つ減らす">−</button>
+          <span>${l.qty}</span>
+          <button data-act="inc" data-i="${i}" aria-label="1つ増やす">＋</button>
+        </div>
+      </li>`).join('') : '<li class="cempty">左の商品をタップすると<br>ここに追加されます</li>';
+    const t = cartTotal(), tax = taxOf(t), pts = L.reduce((a, l) => a + l.qty, 0);
+    $('#cartSum').innerHTML = `
+      <div class="srow"><span>点数</span><span class="num">${pts}点</span></div>
+      <div class="srow"><span>税抜</span><span class="num">${yen(t - tax)}</span></div>
+      <div class="srow"><span>うち消費税(10%)</span><span class="num">${yen(tax)}</span></div>
+      <div class="srow total"><span>合計(税込)</span><span class="num">${yen(t)}</span></div>`;
+    $('#toPay').disabled = !L.length;
+  }
+  function addToCart(p, ci, si) {
+    const ex = state.cart.find(l => l.pid === p.id && l.ci === ci && l.si === si);
+    const inCart = ex ? ex.qty : 0;
+    if (ex) ex.qty++; else state.cart.push(makeItem(p, ci, si));
+    const stock = p.stock[ci][si];
+    if (inCart + 1 > stock) toast(`在庫が${stock}点の商品です。登録漏れがないか確認してください`, true);
+    else toast(`${p.name}(${p.colors[ci]} / ${sizeLabel(p.sizes[si])})を追加しました`);
+    renderCart();
+  }
+  function openVariant(id) {
+    const p = byId(id);
+    if (p.sizes.length === 1 && p.colors.length === 1) { addToCart(p, 0, 0); return; }
+    state.vp = id;
+    $('#vTitle').textContent = p.name;
+    $('#vPrice').textContent = yen(p.price) + '(税込)';
+    const head = `<thead><tr><th></th>${p.sizes.map(s => `<th>${esc(sizeLabel(s))}</th>`).join('')}</tr></thead>`;
+    const body = p.colors.map((c, ci) => `<tr><th>${esc(c)}</th>${p.sizes.map((s, si) => {
+      const n = p.stock[ci][si];
+      return `<td><button class="vbtn ${n ? '' : 'zero'}" data-act="add" data-ci="${ci}" data-si="${si}"><span>${esc(sizeLabel(s))}</span><small>在庫 ${n}</small></button></td>`;
+    }).join('')}</tr>`).join('');
+    $('#vTable').innerHTML = head + '<tbody>' + body + '</tbody>';
+    openOv('#variant');
+  }
+
+  // ---------- お預かり入力 ----------
+  function renderPay() {
+    const t = cartTotal(), r = Number(state.recv) || 0, diff = r - t;
+    $('#pTotal').textContent = yen(t);
+    $('#pRecv').textContent = yen(r);
+    const row = $('#pChgRow');
+    if (!state.recv) { row.className = 'drow chg idle'; $('#pChgLbl').textContent = 'お釣り'; $('#pChg').textContent = '—'; }
+    else if (diff >= 0) { row.className = 'drow chg ok'; $('#pChgLbl').textContent = 'お釣り'; $('#pChg').textContent = yen(diff); }
+    else { row.className = 'drow chg short'; $('#pChgLbl').textContent = '不足'; $('#pChg').textContent = yen(-diff); }
+    $('#payConfirm').disabled = !state.recv || diff < 0;
+  }
+  function pressKey(v) {
+    let s = state.recv === '0' ? '' : state.recv;
+    if (!s && (v === '0' || v === '00')) { state.recv = ''; renderPay(); return; }
+    s = (s + v).slice(0, 7);
+    state.recv = s; renderPay();
+  }
+  function confirmPay() {
+    const t = cartTotal(), r = Number(state.recv) || 0;
+    if (!state.cart.length || r < t) return;
+    const d = new Date();
+    const n = history.filter(h => h.date === todayKey).length + 1;
+    const tx = {
+      id: `${pad2(d.getMonth() + 1)}${pad2(d.getDate())}-${pad2(n)}`, date: todayKey,
+      time: `${pad2(d.getHours())}:${pad2(d.getMinutes())}`,
+      items: state.cart.map(l => ({ ...l })), total: t, tax: taxOf(t), recv: r, change: r - t,
+    };
+    history.push(tx);
+    state.cart.forEach(l => { const p = byId(l.pid); if (p) p.stock[l.ci][l.si] = Math.max(0, p.stock[l.ci][l.si] - l.qty); });
+    state.cart = []; state.recv = '';
+    closeOv();
+    $('#doneChg').textContent = yen(tx.change);
+    $('#doneSub').innerHTML = `<span>お会計 <b class="num">${yen(tx.total)}</b></span><span>お預かり <b class="num">${yen(tx.recv)}</b></span>`;
+    openOv('#done');
+    renderReg();
+  }
+
+  // ---------- 会計履歴 ----------
+  const fmtDay = k => { const d = parseKey(k); return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日(${WD[d.getDay()]})`; };
+  const txOn = k => history.filter(h => h.date === k).sort((a, b) => b.time.localeCompare(a.time));
+  function renderHist() {
+    const list = txOn(state.histDate);
+    $('#histDate').textContent = fmtDay(state.histDate);
+    const sales = list.reduce((a, t) => a + t.total, 0);
+    const ref = refunds.filter(r => r.date === state.histDate).reduce((a, r) => a + r.amount, 0);
+    $('#histSum').innerHTML = `<span>会計<b>${list.length}件</b></span><span>現金売上<b>${yen(sales)}</b></span><span>返金<b>${yen(ref)}</b></span>`;
+    if (!list.length) {
+      $('#histList').innerHTML = '<div class="empty">この日の会計はありません</div>';
+      $('#histDetail').innerHTML = '';
+      return;
+    }
+    if (!list.some(t => t.id === state.histSel)) { state.histSel = list[0].id; state.retSel.clear(); state.retConfirm = false; }
+    $('#histList').innerHTML = list.map(t => {
+      const pts = t.items.reduce((a, i) => a + i.qty, 0);
+      const ret = t.items.some(i => i.returned);
+      return `<button class="hrow" data-act="hsel" data-id="${t.id}" aria-pressed="${t.id === state.histSel}">
+        <span class="t">${t.time}</span>
+        <span class="s">${esc(t.items[0].name)}${t.items.length > 1 ? ` ほか` : ''}<br><small style="color:var(--muted)">${pts}点</small></span>
+        <span class="a">${yen(t.total)}${ret ? '<span class="badge bad">返品あり</span>' : ''}</span></button>`;
+    }).join('');
+    renderHistDetail();
+  }
+  function renderHistDetail() {
+    const t = history.find(h => h.id === state.histSel);
+    if (!t) { $('#histDetail').innerHTML = ''; return; }
+    const selAmt = [...state.retSel].reduce((a, i) => a + t.items[i].price * t.items[i].qty, 0);
+    const myRefunds = refunds.filter(r => r.txId === t.id);
+    const canReturn = t.items.some(i => !i.returned);
+    $('#histDetail').innerHTML = `
+      <div class="panel">
+        <div class="cart-head"><h3>会計 No.${t.id}</h3><span class="num" style="color:var(--muted)">${fmtDay(t.date)} ${t.time}</span></div>
+        <div>${t.items.map((it, i) => it.returned
+          ? `<div class="ditem returned"><span class="ph"></span><span class="nm"><b>${esc(it.name)}</b><span>${esc(it.color)} / ${esc(sizeLabel(it.size))}・${it.qty}点 <span class="badge bad">返品済み</span></span></span><span class="am">${yen(it.price * it.qty)}</span></div>`
+          : `<label class="ditem"><input type="checkbox" data-ret="${i}" ${state.retSel.has(i) ? 'checked' : ''} aria-label="${esc(it.name)}を返品する"><span class="nm"><b>${esc(it.name)}</b><span>${esc(it.color)} / ${esc(sizeLabel(it.size))}・${it.qty}点</span></span><span class="am">${yen(it.price * it.qty)}</span></label>`
+        ).join('')}</div>
+        <dl class="dsum">
+          <dt>合計(税込)</dt><dd class="big">${yen(t.total)}</dd>
+          <dt>税抜</dt><dd>${yen(t.total - t.tax)}</dd>
+          <dt>うち消費税(10%)</dt><dd>${yen(t.tax)}</dd>
+          <dt>お預かり</dt><dd>${yen(t.recv)}</dd>
+          <dt>お釣り</dt><dd>${yen(t.change)}</dd>
+        </dl>
+        ${myRefunds.map(r => `<div class="refund-line"><span>返金(${r.date === t.date ? '' : fmtDay(r.date) + ' '}${r.time})</span><span class="num">−${yen(r.amount)}</span></div>`).join('')}
+        ${canReturn ? (state.retConfirm ? `
+          <div class="confirm-box">
+            <p>返金額 <b class="num" style="font-size:22px">${yen(selAmt)}</b> をお客様に現金でお返しし、在庫を戻します。</p>
+            <div class="row"><button class="btn danger" data-act="ret-do">返品を確定</button><button class="btn" data-act="ret-cancel">やめる</button></div>
+          </div>` : `
+          <p class="hint">返品する商品にチェックを入れてください。</p>
+          <button class="btn" data-act="ret-start" ${state.retSel.size ? '' : 'disabled'}>選択した商品を返品する${state.retSel.size ? `(${yen(selAmt)})` : ''}</button>`) : ''}
+      </div>`;
+  }
+  function doReturn() {
+    const t = history.find(h => h.id === state.histSel);
+    if (!t || !state.retSel.size) return;
+    let amt = 0;
+    state.retSel.forEach(i => {
+      const it = t.items[i]; it.returned = true; amt += it.price * it.qty;
+      const p = byId(it.pid); if (p && p.stock[it.ci]) p.stock[it.ci][it.si] += it.qty;
+    });
+    const d = new Date();
+    refunds.push({ date: todayKey, time: `${pad2(d.getHours())}:${pad2(d.getMinutes())}`, amount: amt, txId: t.id });
+    state.retSel.clear(); state.retConfirm = false;
+    toast(`${yen(amt)} の返品を記録しました`);
+    renderHist();
+  }
+
+  // ---------- レジ締め ----------
+  const todaySales = () => history.filter(h => h.date === todayKey).reduce((a, t) => a + t.total, 0);
+  const todayRefunds = () => refunds.filter(r => r.date === todayKey).reduce((a, r) => a + r.amount, 0);
+  const expected = () => state.float + todaySales() - todayRefunds();
+  const countTotal = () => DENOMS.reduce((a, [v]) => a + v * (state.counts[v] || 0), 0);
+  (function seedCounts() {
+    // サンプル:2千円札は使わず、理論上の現金ぴったりの枚数を入れておく
+    let rest = expected();
+    DENOMS.forEach(([v]) => { if (v === 2000) { state.counts[v] = 0; return; } state.counts[v] = Math.floor(rest / v); rest -= state.counts[v] * v; });
+  })();
+  function renderClose() {
+    $('#float').value = state.float.toLocaleString('ja-JP');
+    $('#denoms').innerHTML = '<tbody>' + DENOMS.map(([v, l]) => `
+      <tr><td class="dn">${l}</td>
+        <td><div class="stepper">
+          <button data-act="cnt" data-v="${v}" data-d="-1" aria-label="${l}を1枚減らす">−</button>
+          <input type="text" inputmode="numeric" id="cnt-${v}" data-cnt="${v}" value="${state.counts[v] || 0}" aria-label="${l}の枚数">
+          <button data-act="cnt" data-v="${v}" data-d="1" aria-label="${l}を1枚増やす">＋</button>
+        </div></td>
+        <td class="st" id="st-${v}">${yen(v * (state.counts[v] || 0))}</td></tr>`).join('') + '</tbody>';
+    renderCloseSum();
+  }
+  function renderCloseSum() {
+    DENOMS.forEach(([v]) => { const c = $('#st-' + v); if (c) c.textContent = yen(v * (state.counts[v] || 0)); });
+    const ct = countTotal(), ex = expected(), diff = ct - ex;
+    $('#countTotal').textContent = yen(ct);
+    const cls = diff === 0 ? 'good' : diff > 0 ? 'warn' : 'bad';
+    const lbl = diff === 0 ? '過不足なし' : diff > 0 ? '現金が多い(過剰)' : '現金が足りない(不足)';
+    $('#closeSum').innerHTML = `
+      <h2>${fmtDay(todayKey)} の締め</h2>
+      <div class="eq">
+        <span class="op"></span><span>釣り銭準備金</span><span class="v">${yen(state.float)}</span>
+        <span class="op">＋</span><span>今日の現金売上</span><span class="v">${yen(todaySales())}</span>
+        <span class="op">−</span><span>今日の返金</span><span class="v">${yen(todayRefunds())}</span>
+        <span class="line"></span>
+        <span class="op">＝</span><span class="strong">レジにあるはずの現金</span><span class="v strong">${yen(ex)}</span>
+        <span class="op"></span><span class="strong">数えた現金</span><span class="v strong">${yen(ct)}</span>
+      </div>
+      <div class="diff ${cls}"><span class="dl">${lbl}</span><span class="dv">${diff === 0 ? '±¥0' : (diff > 0 ? '+' : '−') + yen(Math.abs(diff))}</span></div>
+      <label class="form" style="gap:4px"><span style="font-weight:700;font-size:14px">メモ(過不足の理由など)</span><input type="text" id="closeMemo" placeholder="例:両替で千円札を補充"></label>
+      <button class="btn primary xl" data-act="close-save">締めを保存</button>`;
+  }
+
+  // ---------- 帳簿 ----------
+  function genDay(y, m, d) {
+    const key = `${y}-${pad2(m)}-${pad2(d)}`;
+    const date = new Date(y, m - 1, d);
+    const cats = {}; categories.forEach(c => { cats[c] = { qty: 0, amt: 0 }; });
+    const base = { key, date, cnt: 0, total: 0, tax: 0, refund: 0, cats, closed: false };
+    if (history.some(h => h.date === key)) {
+      history.filter(h => h.date === key).forEach(t => {
+        base.cnt++; base.total += t.total; base.tax += t.tax;
+        t.items.forEach(it => { if (cats[it.cat]) { cats[it.cat].qty += it.qty; cats[it.cat].amt += it.price * it.qty; } });
+      });
+      base.refund = refunds.filter(r => r.date === key).reduce((a, r) => a + r.amount, 0);
+      return base;
+    }
+    if (date.getDay() === 3) { base.closed = true; return base; } // 水曜定休(サンプル)
+    const r = rng(y * 10000 + m * 100 + d);
+    const cnt = 3 + Math.floor(r() * 9);
+    for (let i = 0; i < cnt; i++) {
+      const n = r() < 0.65 ? 1 : 2; let t = 0;
+      for (let k = 0; k < n; k++) {
+        const p = products[Math.floor(r() * 12)];
+        t += p.price; cats[p.cat].qty++; cats[p.cat].amt += p.price;
+      }
+      base.cnt++; base.total += t; base.tax += taxOf(t);
+    }
+    if (r() < 0.1) base.refund = products[Math.floor(r() * 12)].price;
+    return base;
+  }
+  function daysOf(y, m) {
+    const last = new Date(y, m, 0).getDate(), out = [];
+    for (let d = 1; d <= last; d++) {
+      const dt = new Date(y, m - 1, d);
+      if (dt > now) break;
+      out.push(genDay(y, m, d));
+    }
+    return out;
+  }
+  function sumDays(days) {
+    const s = { cnt: 0, total: 0, tax: 0, refund: 0, cats: {} };
+    categories.forEach(c => { s.cats[c] = { qty: 0, amt: 0 }; });
+    days.forEach(d => {
+      s.cnt += d.cnt; s.total += d.total; s.tax += d.tax; s.refund += d.refund;
+      categories.forEach(c => { if (d.cats[c]) { s.cats[c].qty += d.cats[c].qty; s.cats[c].amt += d.cats[c].amt; } });
+    });
+    return s;
+  }
+  function renderLedger() {
+    document.querySelectorAll('[data-act="ledger-mode"]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === state.ledgerMode)));
+    let rows, sum;
+    if (state.ledgerMode === 'day') {
+      $('#ledgerPeriod').textContent = `${state.ly}年${state.lm}月`;
+      $('#ledgerTblTitle').textContent = '日別の売上';
+      const days = daysOf(state.ly, state.lm);
+      sum = sumDays(days);
+      rows = days.map(d => d.closed
+        ? `<tr class="muted"><td>${d.date.getMonth() + 1}/${d.date.getDate()}(${WD[d.date.getDay()]})</td><td colspan="6">定休日</td></tr>`
+        : `<tr><td>${d.date.getMonth() + 1}/${d.date.getDate()}(${WD[d.date.getDay()]})</td><td class="r">${d.cnt}</td><td class="r">${yen(d.total)}</td><td class="r">${yen(d.total - d.tax)}</td><td class="r">${yen(d.tax)}</td><td class="r">${d.refund ? '−' + yen(d.refund) : '—'}</td><td class="r">${yen(d.total - d.refund)}</td></tr>`);
+    } else {
+      $('#ledgerPeriod').textContent = `${state.ly}年`;
+      $('#ledgerTblTitle').textContent = '月別の売上';
+      const lastM = state.ly === now.getFullYear() ? now.getMonth() + 1 : 12;
+      const months = [];
+      for (let m = 1; m <= lastM; m++) months.push({ m, ...sumDays(daysOf(state.ly, m)) });
+      sum = sumDays([]);
+      months.forEach(mo => {
+        sum.cnt += mo.cnt; sum.total += mo.total; sum.tax += mo.tax; sum.refund += mo.refund;
+        categories.forEach(c => { sum.cats[c].qty += mo.cats[c].qty; sum.cats[c].amt += mo.cats[c].amt; });
+      });
+      rows = months.map(mo => `<tr><td>${mo.m}月</td><td class="r">${mo.cnt}</td><td class="r">${yen(mo.total)}</td><td class="r">${yen(mo.total - mo.tax)}</td><td class="r">${yen(mo.tax)}</td><td class="r">${mo.refund ? '−' + yen(mo.refund) : '—'}</td><td class="r">${yen(mo.total - mo.refund)}</td></tr>`);
+    }
+    $('#ledgerTiles').innerHTML = `
+      <div class="tile main"><div class="k">差引売上(税込)</div><div class="v">${yen(sum.total - sum.refund)}</div></div>
+      <div class="tile"><div class="k">売上(税込)</div><div class="v">${yen(sum.total)}</div></div>
+      <div class="tile"><div class="k">税抜</div><div class="v">${yen(sum.total - sum.tax)}</div></div>
+      <div class="tile"><div class="k">うち消費税</div><div class="v">${yen(sum.tax)}</div></div>
+      <div class="tile"><div class="k">返金</div><div class="v">${yen(sum.refund)}</div></div>`;
+    $('#ledgerTable').innerHTML = `
+      <thead><tr><th>${state.ledgerMode === 'day' ? '日付' : '月'}</th><th class="r">件数</th><th class="r">売上(税込)</th><th class="r">税抜</th><th class="r">消費税</th><th class="r">返金</th><th class="r">差引</th></tr></thead>
+      <tbody>${rows.join('') || '<tr class="muted"><td colspan="7">この期間のデータはありません</td></tr>'}</tbody>
+      <tfoot><tr><td>合計</td><td class="r">${sum.cnt}</td><td class="r">${yen(sum.total)}</td><td class="r">${yen(sum.total - sum.tax)}</td><td class="r">${yen(sum.tax)}</td><td class="r">${sum.refund ? '−' + yen(sum.refund) : '—'}</td><td class="r">${yen(sum.total - sum.refund)}</td></tr></tfoot>`;
+    const catTotal = categories.reduce((a, c) => a + sum.cats[c].amt, 0) || 1;
+    $('#catTable').innerHTML = `
+      <thead><tr><th>カテゴリー</th><th class="r">点数</th><th class="r">売上(税込)</th><th>構成比</th></tr></thead>
+      <tbody>${categories.map(c => {
+        const pct = Math.round(sum.cats[c].amt / catTotal * 100);
+        return `<tr><td>${esc(c)}</td><td class="r">${sum.cats[c].qty}</td><td class="r">${yen(sum.cats[c].amt)}</td>
+          <td class="bar-cell"><div style="display:flex;align-items:center;gap:8px"><div class="bar-track" style="flex:1"><div class="bar-fill" style="width:${pct}%"></div></div><span class="num" style="font-size:12px;min-width:3ch;text-align:right">${pct}%</span></div></td></tr>`;
+      }).join('')}</tbody>`;
+  }
+
+  // ---------- 商品管理 ----------
+  function renderAdmin() {
+    $('#adminCat').innerHTML = ['すべて', ...categories].map(c => `<option ${c === state.adminCat ? 'selected' : ''}>${esc(c)}</option>`).join('');
+    $('#adminQuery').value = state.adminQuery;
+    renderAdminTable();
+    $('#catList').innerHTML = categories.map(c => `<span class="chip" style="display:inline-flex;align-items:center">${esc(c)}<small style="color:var(--muted);margin-left:6px">${products.filter(p => p.cat === c).length}</small></span>`).join('');
+    if (!state.draft) loadDraft(state.adminSel);
+    renderAdminForm();
+  }
+  function renderAdminTable() {
+    const q = state.adminQuery.trim();
+    const list = products.filter(p => (state.adminCat === 'すべて' || p.cat === state.adminCat) && (!q || p.name.includes(q)));
+    $('#adminTable').innerHTML = `
+      <thead><tr><th>商品名</th><th>カテゴリー</th><th class="r">税込価格</th><th class="r">仕入価格</th><th class="r">在庫</th></tr></thead>
+      <tbody>${list.map(p => {
+        const s = totalStock(p);
+        return `<tr class="click ${p.id === state.adminSel ? 'sel' : ''}" data-act="admin-sel" data-id="${p.id}"><td><b>${esc(p.name)}</b></td><td>${esc(p.cat)}</td><td class="r">${yen(p.price)}</td><td class="r">${yen(p.cost)}</td><td class="r">${s ? s : '<span class="badge warn">0</span>'}</td></tr>`;
+      }).join('') || '<tr class="muted"><td colspan="5">該当する商品はありません</td></tr>'}</tbody>`;
+  }
+  function loadDraft(id) {
+    const p = byId(id);
+    state.draft = p ? JSON.parse(JSON.stringify(p)) : { id: null, name: '', cat: categories[0], price: 0, cost: 0, sizes: ['S', 'M', 'L'], colors: ['黒'], stock: [[0, 0, 0]] };
+  }
+  function renderAdminForm() {
+    const d = state.draft, tax = taxOf(d.price || 0);
+    $('#adminForm').innerHTML = `
+      <h2>${d.id ? '商品を編集' : '新しい商品'}</h2>
+      <div class="form">
+        <label>商品名<input type="text" id="f-name" value="${esc(d.name)}" placeholder="例:オックスフォードシャツ"></label>
+        <label>カテゴリー<select id="f-cat">${categories.map(c => `<option ${c === d.cat ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select></label>
+        <div class="two">
+          <label>販売価格(税込)<input type="text" class="yen" id="f-price" inputmode="numeric" value="${d.price || ''}" placeholder="0">
+            <span class="help" id="f-price-help">税抜 ${yen((d.price || 0) - tax)} / 消費税 ${yen(tax)}</span></label>
+          <label>仕入価格<input type="text" class="yen" id="f-cost" inputmode="numeric" value="${d.cost || ''}" placeholder="0"></label>
+        </div>
+        <div class="two">
+          <label>サイズ<input type="text" id="f-sizes" value="${esc(d.sizes.join(', '))}"><span class="help">カンマで区切る(F はフリー)</span></label>
+          <label>色<input type="text" id="f-colors" value="${esc(d.colors.join(', '))}"><span class="help">カンマで区切る</span></label>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:14px;margin-bottom:4px">在庫数</div>
+          <div class="tbl-wrap"><table class="stock-grid">
+            <thead><tr><th></th>${d.sizes.map(s => `<th>${esc(sizeLabel(s))}</th>`).join('')}</tr></thead>
+            <tbody>${d.colors.map((c, ci) => `<tr><th style="text-align:left;white-space:nowrap">${esc(c)}</th>${d.sizes.map((s, si) => `<td><input type="text" inputmode="numeric" id="stk-${ci}-${si}" data-stk="${ci}-${si}" value="${d.stock[ci][si]}" aria-label="${esc(c)} ${esc(sizeLabel(s))}の在庫"></td>`).join('')}</tr>`).join('')}</tbody>
+          </table></div>
+        </div>
+        <div class="form-foot">
+          <button class="btn primary" data-act="admin-save">保存</button>
+          ${d.id ? '<button class="btn ghost" data-act="admin-del">削除</button>' : ''}
+        </div>
+      </div>`;
+  }
+  function reshapeDraft() {
+    const d = state.draft;
+    const sizes = $('#f-sizes').value.split(/[,、]/).map(s => s.trim()).filter(Boolean);
+    const colors = $('#f-colors').value.split(/[,、]/).map(s => s.trim()).filter(Boolean);
+    if (!sizes.length || !colors.length) return;
+    const old = {};
+    d.colors.forEach((c, ci) => d.sizes.forEach((s, si) => { old[c + '|' + s] = d.stock[ci][si]; }));
+    d.sizes = sizes; d.colors = colors;
+    d.stock = colors.map(c => sizes.map(s => old[c + '|' + s] || 0));
+    renderAdminForm();
+  }
+  function saveDraft() {
+    const d = state.draft;
+    d.name = $('#f-name').value.trim();
+    if (!d.name) { toast('商品名を入れてください', true); return; }
+    d.cat = $('#f-cat').value;
+    d.price = Number($('#f-price').value.replace(/[^\d]/g, '')) || 0;
+    d.cost = Number($('#f-cost').value.replace(/[^\d]/g, '')) || 0;
+    if (d.id) Object.assign(byId(d.id), JSON.parse(JSON.stringify(d)));
+    else { d.id = nextId++; products.push(JSON.parse(JSON.stringify(d))); }
+    state.adminSel = d.id;
+    toast('保存しました(モックのため、再読み込みすると元に戻ります)');
+    renderAdmin();
+  }
+
+  // ---------- イベント ----------
+  document.addEventListener('click', e => {
+    const el = e.target.closest('[data-act]');
+    if (!el || el.disabled) return;
+    const a = el.dataset.act, v = el.dataset.v;
+    switch (a) {
+      case 'view': setView(v); break;
+      case 'cat': state.cat = v; renderCats(); renderGrid(); break;
+      case 'pick': openVariant(Number(el.dataset.id)); break;
+      case 'add': closeOv(); addToCart(byId(state.vp), Number(el.dataset.ci), Number(el.dataset.si)); break;
+      case 'inc': state.cart[el.dataset.i].qty++; renderCart(); break;
+      case 'dec': { const l = state.cart[el.dataset.i]; l.qty--; if (l.qty <= 0) state.cart.splice(el.dataset.i, 1); renderCart(); break; }
+      case 'cart-clear': state.cart = []; renderCart(); break;
+      case 'pay-open': if (state.cart.length) { state.recv = ''; renderPay(); openOv('#pay'); } break;
+      case 'key': pressKey(v); break;
+      case 'back': state.recv = state.recv.slice(0, -1); renderPay(); break;
+      case 'recv-clear': state.recv = ''; renderPay(); break;
+      case 'exact': state.recv = String(cartTotal()); renderPay(); break;
+      case 'addbill': state.recv = String(Math.min(9999999, (Number(state.recv) || 0) + Number(v))); renderPay(); break;
+      case 'pay-confirm': confirmPay(); break;
+      case 'close-ov': closeOv(); break;
+      case 'hist-day': { const d = parseKey(state.histDate); d.setDate(d.getDate() + Number(v)); state.histDate = keyOf(d); state.histSel = null; renderHist(); break; }
+      case 'hist-today': state.histDate = todayKey; state.histSel = null; renderHist(); break;
+      case 'hsel': state.histSel = el.dataset.id; state.retSel.clear(); state.retConfirm = false; renderHist(); break;
+      case 'ret-start': state.retConfirm = true; renderHistDetail(); break;
+      case 'ret-cancel': state.retConfirm = false; renderHistDetail(); break;
+      case 'ret-do': doReturn(); break;
+      case 'cnt': {
+        const n = Math.max(0, (state.counts[v] || 0) + Number(el.dataset.d));
+        state.counts[v] = n; $('#cnt-' + v).value = n; renderCloseSum(); break;
+      }
+      case 'close-save': toast('締めを保存しました(モック)'); break;
+      case 'ledger-mode': state.ledgerMode = v; renderLedger(); break;
+      case 'ledger-move':
+        if (state.ledgerMode === 'day') { state.lm += Number(v); if (state.lm < 1) { state.lm = 12; state.ly--; } if (state.lm > 12) { state.lm = 1; state.ly++; } }
+        else state.ly += Number(v);
+        renderLedger(); break;
+      case 'excel': toast('モックのため、ダウンロードはまだ動きません。本番では Excel ファイル(.xlsx)を保存します', true); break;
+      case 'admin-sel': state.adminSel = Number(el.dataset.id); loadDraft(state.adminSel); renderAdminTable(); renderAdminForm(); break;
+      case 'admin-new': state.adminSel = null; loadDraft(null); renderAdminTable(); renderAdminForm(); break;
+      case 'admin-save': saveDraft(); break;
+      case 'admin-del': toast('モックのため、削除はまだ動きません', true); break;
+      case 'cat-add': {
+        const n = $('#newCat').value.trim();
+        if (n && !categories.includes(n)) { categories.push(n); $('#newCat').value = ''; toast(`カテゴリー「${n}」を追加しました`); renderAdmin(); }
+        break;
+      }
+    }
+  });
+  document.addEventListener('change', e => {
+    const t = e.target;
+    if (t.dataset.ret !== undefined) {
+      const i = Number(t.dataset.ret);
+      if (t.checked) state.retSel.add(i); else state.retSel.delete(i);
+      state.retConfirm = false; renderHistDetail();
+    } else if (t.id === 'adminCat') { state.adminCat = t.value; renderAdminTable(); }
+    else if (t.id === 'f-sizes' || t.id === 'f-colors') reshapeDraft();
+  });
+  document.addEventListener('input', e => {
+    const t = e.target;
+    if (t.dataset.cnt) { state.counts[t.dataset.cnt] = Number(t.value.replace(/[^\d]/g, '')) || 0; renderCloseSum(); }
+    else if (t.id === 'float') { state.float = Number(t.value.replace(/[^\d]/g, '')) || 0; renderCloseSum(); }
+    else if (t.id === 'adminQuery') { state.adminQuery = t.value; renderAdminTable(); }
+    else if (t.id === 'f-price') {
+      const p = Number(t.value.replace(/[^\d]/g, '')) || 0, tax = taxOf(p);
+      $('#f-price-help').textContent = `税抜 ${yen(p - tax)} / 消費税 ${yen(tax)}`;
+    } else if (t.dataset.stk) {
+      const [ci, si] = t.dataset.stk.split('-').map(Number);
+      state.draft.stock[ci][si] = Number(t.value.replace(/[^\d]/g, '')) || 0;
+    }
+  });
+  document.addEventListener('keydown', e => {
+    if (!$('#pay').hidden) {
+      if (/^[0-9]$/.test(e.key)) { pressKey(e.key); e.preventDefault(); }
+      else if (e.key === 'Backspace') { state.recv = state.recv.slice(0, -1); renderPay(); e.preventDefault(); }
+      else if (e.key === 'Enter') { confirmPay(); e.preventDefault(); }
+      else if (e.key === 'Escape') closeOv();
+    } else if (!$('#done').hidden && (e.key === 'Enter' || e.key === 'Escape')) { closeOv(); e.preventDefault(); }
+    else if (!$('#variant').hidden && e.key === 'Escape') closeOv();
+  });
+  document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o && o.id !== 'done') closeOv(); }));
+
+  tick(); setInterval(tick, 30000);
+  setView('reg');
+})();
+</script>
