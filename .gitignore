@@ -6,4 +6,10 @@ dist/
 *.log
 .DS_Store
 Thumbs.db
-supabase/.temp/
+
+# ひな形(Vite)から追加
+dist-ssr/
+*.local
+.vscode/*
+!.vscode/extensions.json
+.idea/
