@@ -7,6 +7,8 @@
 
 ## 技術スタック
 
-TypeScript / React + Vite / Supabase / ExcelJS / Cloudflare Pages
+TypeScript / React + Vite / IndexedDB(Dexie.js) / ExcelJS / Cloudflare Pages
+
+データは端末のブラウザの中にだけ保存し、クラウドには送らない。
 
 詳しくは仕様書の「4. 技術スタック」を参照。
