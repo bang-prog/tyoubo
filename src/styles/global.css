@@ -1,0 +1,130 @@
+/* デザイントークン(mockup/index.html から移したもの)。色はすべてここで定義し、各画面ではこの変数を使う。 */
+:root {
+  --bg: #f2f4f8;
+  --surface: #ffffff;
+  --surface-2: #e8ecf4;
+  --line: #d3d9e6;
+  --fg: #1a2133;
+  --muted: #5b6479;
+  --accent: #284a91;
+  --accent-fg: #ffffff;
+  --accent-soft: #dfe7f8;
+  --good: #1d7a4b;
+  --good-soft: #ddf2e6;
+  --bad: #b3261e;
+  --bad-soft: #fbe2df;
+  --warn: #855600;
+  --warn-soft: #fbeed2;
+  --scrim: rgba(18, 24, 40, 0.55);
+
+  --font-ui: 'IBM Plex Sans JP', 'Hiragino Sans', 'Yu Gothic UI', Meiryo, sans-serif;
+  --font-num: 'IBM Plex Mono', ui-monospace, 'SF Mono', Consolas, monospace;
+
+  /* 画面の左右の余白。iPad などの端の切り欠き(セーフエリア)も避ける */
+  --gutter-left: max(16px, env(safe-area-inset-left, 0px));
+  --gutter-right: max(16px, env(safe-area-inset-right, 0px));
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #10141e;
+    --surface: #1a2030;
+    --surface-2: #242c40;
+    --line: #343e57;
+    --fg: #e8ebf3;
+    --muted: #9ba4b9;
+    --accent: #91b1f6;
+    --accent-fg: #0c1427;
+    --accent-soft: #233359;
+    --good: #72d6a3;
+    --good-soft: #15392a;
+    --bad: #ff8d84;
+    --bad-soft: #47211e;
+    --warn: #f1c263;
+    --warn-soft: #3c2e12;
+    --scrim: rgba(0, 0, 0, 0.65);
+    color-scheme: dark;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  text-wrap: balance;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: 0;
+  background: none;
+  /* タップとクリックの両方で同じように反応させる(ダブルタップでの拡大を防ぐ) */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+a {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* 金額など桁をそろえたい数字 */
+.num {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

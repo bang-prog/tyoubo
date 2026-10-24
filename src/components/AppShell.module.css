@@ -1,0 +1,70 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-left: var(--gutter-left);
+  padding-right: var(--gutter-right);
+  padding-top: max(8px, env(safe-area-inset-top, 0px));
+  padding-bottom: 8px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  font-size: 18px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.tab:active {
+  background: var(--surface-2);
+}
+
+.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.clock {
+  color: var(--muted);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.main {
+  flex: 1;
+  min-height: 0;
+}
+
+@media (max-width: 760px) {
+  .clock {
+    display: none;
+  }
+}
