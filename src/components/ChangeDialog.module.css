@@ -1,0 +1,49 @@
+.done {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: center;
+}
+
+.label {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--good);
+}
+
+.amount {
+  margin: 0;
+  font-weight: 600;
+  font-size: clamp(64px, 13vw, 120px);
+  line-height: 1;
+  color: var(--good);
+}
+
+.detail {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin: 0;
+  color: var(--muted);
+}
+
+.detail div {
+  display: flex;
+  gap: 8px;
+}
+
+.detail dd {
+  margin: 0;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.next {
+  min-height: 64px;
+  border-radius: 12px;
+  font-size: 19px;
+  font-weight: 700;
+  background: var(--accent);
+  color: var(--accent-fg);
+}

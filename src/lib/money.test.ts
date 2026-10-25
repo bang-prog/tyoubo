@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { assertYen, calcChange, cartTotal, lineTotal, MAX_RECEIVED, splitTax, taxOf } from './money'
+import {
+  assertYen,
+  calcChange,
+  cartTotal,
+  formatYen,
+  lineTotal,
+  MAX_RECEIVED,
+  splitTax,
+  taxOf,
+} from './money'
 
 describe('taxOf', () => {
   it('仕様書の例:11,270円 → 消費税1,024円', () => {
@@ -79,6 +88,14 @@ describe('calcChange', () => {
 
   it('足りないときは不足額を返す', () => {
     expect(calcChange(5000, 6980)).toEqual({ ok: false, shortage: 1980 })
+  })
+})
+
+describe('formatYen', () => {
+  it('¥ と3桁ごとのカンマを付ける', () => {
+    expect(formatYen(0)).toBe('¥0')
+    expect(formatYen(980)).toBe('¥980')
+    expect(formatYen(1234567)).toBe('¥1,234,567')
   })
 })
 

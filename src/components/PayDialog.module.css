@@ -1,0 +1,199 @@
+/* 左に金額の表示、右に電卓のキー、下に操作ボタン。狭い画面では縦に並べる */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+}
+
+.display {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.title {
+  font-size: 17px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.label {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--muted);
+}
+
+.label small {
+  display: block;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.amount {
+  text-align: right;
+  font-weight: 600;
+  font-size: 34px;
+  overflow-wrap: anywhere;
+}
+
+/* お預かりとお釣りは打ち間違いに気づけるよう特に大きく */
+.big {
+  font-size: clamp(44px, 6.4vw, 72px);
+  line-height: 1.1;
+}
+
+.received {
+  border: 3px solid var(--accent);
+}
+
+.received .label {
+  color: var(--accent);
+}
+
+.idle .amount {
+  color: var(--muted);
+}
+
+.ok {
+  background: var(--good-soft);
+  border-color: var(--good);
+}
+
+.ok .label,
+.ok .amount {
+  color: var(--good);
+}
+
+.short {
+  background: var(--bad-soft);
+  border-color: var(--bad);
+}
+
+.short .label,
+.short .amount {
+  color: var(--bad);
+}
+
+.note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.pad {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quick {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.quickKey {
+  min-height: 60px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 17px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  transition: transform 0.06s;
+}
+
+.keys {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.key {
+  min-height: 78px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-size: 34px;
+  font-weight: 600;
+  transition:
+    transform 0.06s,
+    background-color 0.1s;
+}
+
+.fnKey {
+  font-size: 24px;
+  color: var(--muted);
+}
+
+/* 押したことが指でもマウスでも分かるように、押している間だけ少し縮める */
+.quickKey:active,
+.key:active {
+  transform: scale(0.96);
+}
+
+.key:active {
+  background: var(--accent-soft);
+}
+
+.footer {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 10px;
+}
+
+.footerButton {
+  min-height: 68px;
+  padding: 0 24px;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 700;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.confirm {
+  flex: 1;
+  font-size: 21px;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+}
+
+@media (max-width: 760px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .key {
+    min-height: 64px;
+    font-size: 28px;
+  }
+
+  .quickKey {
+    min-height: 52px;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .quick {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .footer {
+    flex-wrap: wrap;
+  }
+
+  .confirm {
+    flex-basis: 100%;
+  }
+}

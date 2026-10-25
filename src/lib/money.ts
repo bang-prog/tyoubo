@@ -59,6 +59,11 @@ export function cartTotal(lines: readonly Line[]): number {
   return lines.reduce((sum, line) => sum + lineTotal(line), 0)
 }
 
+/** 画面に表示する形にする。12345 → "¥12,345" */
+export function formatYen(value: number): string {
+  return '¥' + value.toLocaleString('ja-JP')
+}
+
 export type ChangeResult =
   | { ok: true; change: number }
   | { ok: false; shortage: number }
