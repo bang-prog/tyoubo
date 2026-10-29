@@ -1,0 +1,97 @@
+.title {
+  font-size: 18px;
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.help {
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.two {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.yen {
+  text-align: right;
+  font-size: 18px;
+}
+
+.stockWrap {
+  overflow-x: auto;
+}
+
+.stockGrid {
+  border-collapse: collapse;
+}
+
+.stockGrid th,
+.stockGrid td {
+  padding: 4px 6px;
+}
+
+.stockGrid thead th {
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.colorName {
+  text-align: left;
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+.stockInput {
+  width: 72px;
+  min-height: 44px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  text-align: center;
+  font-size: 17px;
+}
+
+.negative {
+  border-color: var(--bad);
+  color: var(--bad);
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.save {
+  flex: 1;
+}
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 2px solid var(--bad);
+  background: var(--bad-soft);
+}
+
+.confirm p {
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .two {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

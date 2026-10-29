@@ -1,0 +1,47 @@
+.title {
+  font-size: 18px;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-block: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.name {
+  font-weight: 700;
+}
+
+.count {
+  margin-left: 8px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.edit {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.add {
+  display: flex;
+  gap: 8px;
+}
