@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { nowIso } from './time'
+import { businessDateOf, nowIso } from './time'
+
+describe('businessDateOf', () => {
+  it('端末の日付を YYYY-MM-DD にする', () => {
+    expect(businessDateOf(new Date(2026, 0, 5, 23, 59))).toBe('2026-01-05')
+    expect(businessDateOf(new Date(2026, 10, 4, 0, 0))).toBe('2026-11-04')
+  })
+})
 
 describe('nowIso', () => {
   it('時差付きの ISO 8601 形式になる', () => {

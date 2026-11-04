@@ -9,12 +9,16 @@ const BILLS = [1000, 5000, 10000] as const
 type Props = {
   /** お会計(税込) */
   total: number
+  /** 保存している間は確定できないようにする(二重に保存しないため) */
+  busy?: boolean
+  /** 保存できなかったときのエラー */
+  error?: string | null
   onCancel: () => void
   onConfirm: (result: { received: number; change: number }) => void
 }
 
 /** 電卓画面。お預かりを入力し、お釣りを表示する(仕様書 §5 F2)。 */
-export default function PayDialog({ total, onCancel, onConfirm }: Props) {
+export default function PayDialog({ total, busy = false, error = null, onCancel, onConfirm }: Props) {
   const [input, dispatch] = useReducer(cashInputReducer, '')
 
   const entered = input !== ''
@@ -22,7 +26,7 @@ export default function PayDialog({ total, onCancel, onConfirm }: Props) {
   const result = calcChange(received, total)
 
   function confirm() {
-    if (entered && result.ok) onConfirm({ received, change: result.change })
+    if (!busy && entered && result.ok) onConfirm({ received, change: result.change })
   }
 
   // PC のキーボード操作:数字キーで入力、Backspace で1文字消す、Enter で確定(Esc は Modal が受け取る)
@@ -82,9 +86,13 @@ export default function PayDialog({ total, onCancel, onConfirm }: Props) {
             </span>
           </div>
 
-          <p className={styles.note}>
-            PC ではキーボードの数字キーでも入力できます(Enter で確定、Esc で戻る)。
-          </p>
+          {error ? (
+            <p className="error" role="alert">
+              {error}
+            </p>
+          ) : (
+            <p className={styles.note}>PC ではキーボードの数字キーでも入力できます(Enter で確定、Esc で戻る)。</p>
+          )}
         </div>
 
         <div className={styles.pad}>
@@ -136,9 +144,9 @@ export default function PayDialog({ total, onCancel, onConfirm }: Props) {
             type="button"
             className={`${styles.footerButton} ${styles.confirm}`}
             onClick={confirm}
-            disabled={!entered || !result.ok}
+            disabled={busy || !entered || !result.ok}
           >
-            会計を確定
+            {busy ? '保存しています…' : '会計を確定'}
           </button>
         </div>
       </div>

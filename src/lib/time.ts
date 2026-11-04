@@ -1,5 +1,13 @@
 const pad2 = (n: number) => String(n).padStart(2, '0')
 
+/**
+ * 営業日('YYYY-MM-DD')。端末の時計の日付をそのまま使う。
+ * 営業時間が日付をまたがない前提(仕様書 §13 Q3)。またぐ場合はここで区切りの時刻をずらす。
+ */
+export function businessDateOf(date = new Date()): string {
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`
+}
+
 /** 端末の時刻を、時差付きの ISO 8601 形式にする。例:2026-10-29T14:05:09+09:00 */
 export function nowIso(date = new Date()): string {
   const offset = -date.getTimezoneOffset()

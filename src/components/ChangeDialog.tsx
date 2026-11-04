@@ -3,6 +3,8 @@ import Modal from './Modal'
 import styles from './ChangeDialog.module.css'
 
 type Props = {
+  /** 会計番号 */
+  saleNo: string
   total: number
   received: number
   change: number
@@ -11,7 +13,7 @@ type Props = {
 }
 
 /** 会計の完了画面。お釣りを大きく表示する。 */
-export default function ChangeDialog({ total, received, change, onNext }: Props) {
+export default function ChangeDialog({ saleNo, total, received, change, onNext }: Props) {
   return (
     <Modal
       labelledBy="change-title"
@@ -37,6 +39,10 @@ export default function ChangeDialog({ total, received, change, onNext }: Props)
           <div>
             <dt>お預かり</dt>
             <dd className="num">{formatYen(received)}</dd>
+          </div>
+          <div>
+            <dt>会計番号</dt>
+            <dd className="num">{saleNo}</dd>
           </div>
         </dl>
         <button type="button" className={styles.next} onClick={onNext}>

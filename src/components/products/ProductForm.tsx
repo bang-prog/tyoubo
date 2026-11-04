@@ -3,6 +3,7 @@ import { deleteProduct, saveProduct, type ProductView, type StockEntry } from '.
 import { db } from '../../db/db'
 import { userMessage } from '../../db/errors'
 import type { Category } from '../../db/types'
+import { sizeLabel } from '../../lib/labels'
 import { formatYen, splitTax } from '../../lib/money'
 import styles from './ProductForm.module.css'
 
@@ -181,7 +182,7 @@ export default function ProductForm({ categories, product, notice, onSaved, onDe
                 <tr>
                   <th />
                   {sizes.map((size) => (
-                    <th key={size}>{size === 'F' ? 'フリー' : size}</th>
+                    <th key={size}>{sizeLabel(size)}</th>
                   ))}
                 </tr>
               </thead>

@@ -1,0 +1,132 @@
+.cart {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.title {
+  font-size: 18px;
+}
+
+.list {
+  flex: 1;
+  min-height: 80px;
+  overflow: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.empty {
+  padding: 32px 8px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 10px;
+  padding-block: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.unavailable .info b,
+.unavailable .amount {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.unavailable .info span {
+  color: var(--bad);
+}
+
+.info {
+  min-width: 0;
+}
+
+.info b {
+  display: block;
+}
+
+.info span {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.amount {
+  align-self: center;
+  text-align: right;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.qty {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.qty button {
+  width: 44px;
+  height: 40px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.qty button:active:not(:disabled) {
+  background: var(--accent-soft);
+}
+
+.qty span {
+  min-width: 36px;
+  text-align: center;
+  font-size: 17px;
+}
+
+.sum {
+  display: grid;
+  gap: 4px;
+  padding-top: 10px;
+  border-top: 2px solid var(--fg);
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.total {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.total .num {
+  font-size: 34px;
+  font-weight: 600;
+}
+
+.pay {
+  width: 100%;
+  min-height: 64px;
+  font-size: 19px;
+}

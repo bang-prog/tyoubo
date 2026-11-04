@@ -1,0 +1,83 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.title {
+  font-size: 18px;
+}
+
+.price {
+  margin: 2px 0 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  border-collapse: separate;
+  border-spacing: 8px;
+  margin: -8px;
+}
+
+.table th {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.color {
+  text-align: left;
+  padding-right: 4px;
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 96px;
+  min-height: 72px;
+  border-radius: 12px;
+  border: 2px solid var(--line);
+  background: var(--surface);
+  transition: transform 0.06s;
+}
+
+.cell:active {
+  transform: scale(0.96);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.size {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.cell small {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* 在庫0以下は点線にして、在庫の登録漏れに気づけるようにする(選ぶことはできる) */
+.zero {
+  border-style: dashed;
+}
+
+.zero small {
+  color: var(--warn);
+  font-weight: 700;
+}
