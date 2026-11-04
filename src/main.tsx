@@ -1,8 +1,6 @@
-import '@fontsource/ibm-plex-sans-jp/400.css'
-import '@fontsource/ibm-plex-sans-jp/500.css'
-import '@fontsource/ibm-plex-sans-jp/700.css'
-import '@fontsource/ibm-plex-mono/500.css'
-import '@fontsource/ibm-plex-mono/600.css'
+// BIZ UDPゴシック(ユニバーサルデザインのフォント)。太さは 400 と 700 の2種類だけ
+import '@fontsource/biz-udpgothic/400.css'
+import '@fontsource/biz-udpgothic/700.css'
 import './styles/global.css'
 
 import { StrictMode } from 'react'

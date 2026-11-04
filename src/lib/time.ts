@@ -2,7 +2,7 @@ const pad2 = (n: number) => String(n).padStart(2, '0')
 
 /**
  * 営業日('YYYY-MM-DD')。端末の時計の日付をそのまま使う。
- * 営業時間が日付をまたがない前提(仕様書 §13 Q3)。またぐ場合はここで区切りの時刻をずらす。
+ * 営業時間は日付をまたがない(仕様書 §3、§13 Q3 で決定)。
  */
 export function businessDateOf(date = new Date()): string {
   return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`

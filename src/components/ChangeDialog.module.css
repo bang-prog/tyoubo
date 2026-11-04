@@ -13,7 +13,7 @@
 
 .amount {
   margin: 0;
-  font-weight: 600;
+  font-weight: 700;
   font-size: clamp(64px, 13vw, 120px);
   line-height: 1;
   color: var(--good);
@@ -35,7 +35,7 @@
 
 .detail dd {
   margin: 0;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--fg);
 }
 

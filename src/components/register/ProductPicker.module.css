@@ -18,7 +18,7 @@
   border-radius: 999px;
   border: 1px solid var(--line);
   background: var(--surface);
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .chip[aria-pressed='true'] {
@@ -73,7 +73,7 @@
 
 .price {
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .stock {

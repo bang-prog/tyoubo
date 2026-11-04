@@ -17,8 +17,13 @@
   --warn-soft: #fbeed2;
   --scrim: rgba(18, 24, 40, 0.55);
 
-  --font-ui: 'IBM Plex Sans JP', 'Hiragino Sans', 'Yu Gothic UI', Meiryo, sans-serif;
-  --font-num: 'IBM Plex Mono', ui-monospace, 'SF Mono', Consolas, monospace;
+  /*
+   * 文章も数字も BIZ UDPゴシック(ユニバーサルデザインのフォント)。
+   * 数字をすべて同じ幅にする BIZ UDゴシックはカンマの後ろが空いて「¥10, 000」に見えるため使わない。
+   * BIZ UDPゴシックは「1」だけ少し細いが、金額は右そろえにしているので読みやすさに影響はない。
+   */
+  --font-ui: 'BIZ UDPGothic', 'Hiragino Sans', 'Yu Gothic UI', Meiryo, sans-serif;
+  --font-num: var(--font-ui);
 
   /* 画面の左右の余白。iPad などの端の切り欠き(セーフエリア)も避ける */
   --gutter-left: max(16px, env(safe-area-inset-left, 0px));
