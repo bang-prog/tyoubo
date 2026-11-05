@@ -57,6 +57,7 @@ export async function createSale(
       items.push({
         id: crypto.randomUUID(),
         saleId,
+        lineNo: items.length,
         variantId: variant.id,
         productName: product.name,
         categoryName: category?.name ?? '',

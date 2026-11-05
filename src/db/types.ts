@@ -54,6 +54,8 @@ export type Sale = {
 export type SaleItem = {
   id: string
   saleId: string
+  /** 会計の中で何行目か(0から)。カートに入れた順に表示するため。古いデータにはない */
+  lineNo?: number
   variantId: string
   productName: string
   categoryName: string

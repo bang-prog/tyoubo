@@ -1,0 +1,93 @@
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: 17px;
+}
+
+.when {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.items {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.items th {
+  padding: 6px 8px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.items td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.items td b {
+  display: block;
+}
+
+.variant {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* .items th の左そろえより優先させるため、.items を付ける */
+.items .r {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.sum {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px 16px;
+  margin: 0;
+}
+
+.sum dt {
+  color: var(--muted);
+}
+
+.sum dd {
+  margin: 0;
+  text-align: right;
+}
+
+.big {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.refunds {
+  margin: 0;
+  padding: 10px 0 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+
+.refunds li {
+  display: flex;
+  justify-content: space-between;
+  color: var(--bad);
+  font-size: 14px;
+}

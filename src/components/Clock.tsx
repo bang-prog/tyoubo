@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
-
-const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土']
+import { WEEKDAYS } from '../lib/time'
 
 function format(d: Date): string {
   const hh = String(d.getHours()).padStart(2, '0')
