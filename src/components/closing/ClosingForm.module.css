@@ -1,0 +1,214 @@
+/* 左に準備金と金種の表、右に過不足。狭い画面では縦に並べる */
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.left {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.heading {
+  font-size: 17px;
+}
+
+.yenField {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.yenField input {
+  max-width: 260px;
+  min-height: 60px;
+  font-size: 26px;
+  font-weight: 700;
+  text-align: right;
+  color: var(--fg);
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.denoms {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.denoms th,
+.denoms td {
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.denoms th {
+  text-align: left;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.stepper button {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.stepper button:active {
+  background: var(--accent-soft);
+}
+
+.stepper input {
+  width: 72px;
+  min-height: 44px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  text-align: center;
+  font-size: 18px;
+}
+
+.subtotal {
+  text-align: right;
+  white-space: nowrap;
+  font-size: 16px;
+}
+
+.countedTotal {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-top: 4px;
+  font-weight: 700;
+}
+
+.countedTotal .num {
+  font-size: 26px;
+}
+
+.summary {
+  position: sticky;
+  top: 0;
+}
+
+/* 横の隙間を 0 にして、太字の行の上の線が途切れないようにする(隙間は dd の padding で取る) */
+.equation {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 0;
+  margin: 0;
+}
+
+.equation dt {
+  color: var(--muted);
+}
+
+.equation dd {
+  margin: 0;
+  padding-left: 12px;
+  text-align: right;
+  font-size: 17px;
+}
+
+.op {
+  display: inline-block;
+  width: 1.4em;
+  font-weight: 700;
+}
+
+.equation .strong {
+  color: var(--fg);
+  font-weight: 700;
+  border-top: 1px solid var(--line);
+  padding-top: 6px;
+}
+
+.equation dd.strong {
+  font-size: 22px;
+}
+
+.diff {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 16px;
+  border-radius: 14px;
+  text-align: center;
+}
+
+.diffLabel {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.diffValue {
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.even {
+  background: var(--good-soft);
+  color: var(--good);
+}
+
+.over {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+.short {
+  background: var(--bad-soft);
+  color: var(--bad);
+}
+
+.waiting {
+  margin: 0;
+  padding: 20px 16px;
+  border-radius: 14px;
+  border: 1px dashed var(--line);
+  text-align: center;
+  color: var(--muted);
+}
+
+.memo {
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.save {
+  width: 100%;
+  min-height: 64px;
+  font-size: 19px;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .summary {
+    position: static;
+  }
+}
