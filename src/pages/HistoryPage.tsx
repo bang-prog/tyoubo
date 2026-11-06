@@ -75,7 +75,8 @@ export default function HistoryPage() {
       ) : (
         <div className={styles.body}>
           <SaleList sales={day.sales} selectedId={selected?.id ?? null} onSelect={setSelectedId} />
-          {selected && <SaleDetailPanel sale={selected} />}
+          {/* 別の会計を選んだら、返品のチェックなどを消して作り直す */}
+          {selected && <SaleDetailPanel key={selected.id} sale={selected} />}
         </div>
       )}
     </section>

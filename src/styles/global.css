@@ -121,6 +121,16 @@ a {
   display: none !important;
 }
 
+/* 画面には出さず、読み上げにだけ使う文字 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
 /* 金額など桁をそろえたい数字 */
 .num {
   font-family: var(--font-num);

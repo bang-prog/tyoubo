@@ -91,3 +91,99 @@
   color: var(--bad);
   font-size: 14px;
 }
+
+/* ---------- 返品 ---------- */
+
+.check {
+  width: 40px;
+}
+
+.check input {
+  width: 26px;
+  height: 26px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.selected td {
+  background: var(--bad-soft);
+}
+
+.returned .name,
+.returned .amount {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.qtyPicker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+.qtyPicker button {
+  width: 40px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.qtyPicker :global(.num) {
+  min-width: 24px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.qtyPicker small {
+  color: var(--muted);
+}
+
+.memo {
+  margin-left: 8px;
+  color: var(--muted);
+}
+
+.returnBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 2px solid var(--bad);
+  background: var(--bad-soft);
+}
+
+.confirm p {
+  margin: 0;
+}
+
+.refundAmount {
+  font-size: 22px;
+}
+
+.memoField {
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
