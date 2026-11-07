@@ -1,0 +1,55 @@
+.wrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th {
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+/* .table th の左そろえより優先させるため、.table を付ける */
+.table .r {
+  text-align: right;
+}
+
+.empty td {
+  color: var(--muted);
+}
+
+.refund {
+  color: var(--bad);
+}
+
+.net {
+  font-weight: 700;
+}
+
+.table tfoot td {
+  font-weight: 700;
+  border-top: 2px solid var(--fg);
+  border-bottom: 0;
+}
+
+.download {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 13px;
+}

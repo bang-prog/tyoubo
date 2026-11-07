@@ -1,6 +1,6 @@
 # レジ帳簿 アーキテクチャ
 
-- 更新:2026-11-04(ステップ⑦まで実装済み)
+- 更新:2026-11-07(ステップ⑪まで実装済み)
 - 仕様:[spec.md](spec.md)
 
 図は Mermaid で書いています。GitHub ではそのまま図として表示されます。
@@ -16,7 +16,7 @@ flowchart LR
   dev["開発用の PC<br/>コードを書く"] -- "git push" --> gh["GitHub<br/>bang-prog/tyoubo"]
   gh -- "自動デプロイ(予定)" --> cf["Cloudflare Pages<br/>画面のファイルを配る"]
 
-  subgraph device["お店の端末(iPad または PC)"]
+  subgraph device["お店の端末(iPhone)"]
     browser["ブラウザ<br/>レジ帳簿アプリ"]
     idb[("IndexedDB<br/>商品・在庫・会計・設定")]
     browser <--> idb
@@ -45,7 +45,7 @@ flowchart TB
     shell["AppShell<br/>タブ・時計"]
     reg["会計<br/>RegisterPage"]
     prod["商品管理<br/>ProductsPage"]
-    rest["会計履歴・レジ締め・帳簿・設定<br/>(今は枠だけ)"]
+    rest["会計履歴・レジ締め・帳簿<br/>設定(今は枠だけ)"]
   end
 
   subgraph state["画面をまたいで持つ状態  src/state"]
@@ -176,7 +176,7 @@ erDiagram
 
 - 商品やサイズ・色は消さずに `isActive: false` にする(論理削除)。過去の売上が参照しているため。
 - 会計の明細には、商品名・カテゴリー名・価格を会計した時点の値で書き写す。あとで商品を編集しても、過去の帳簿が変わらない。
-- `refunds`、`refundItems`、`closings` はテーブルだけ用意してあり、使うのはステップ⑨・⑩から。
+- 返品(`refunds`、`refundItems`)はステップ⑨、レジ締め(`closings`)はステップ⑩から使っている。
 
 ---
 
@@ -226,9 +226,10 @@ sequenceDiagram
 | 5 | データの土台 | `src/db/db.ts`、`src/db/types.ts`、`src/db/settings.ts` | ✅ |
 | 6 | 商品管理 | `src/db/catalog.ts`、`src/components/products/*` | ✅ |
 | 7 | 会計 | `src/db/sales.ts`、`src/lib/cart.ts`、`src/components/register/*` | ✅ |
-| 8 | 会計履歴 | | ⬜ |
-| 9 | 返品 | | ⬜ |
-| 10 | レジ締め | | ⬜ |
-| 11 | 帳簿と Excel 出力 | | ⬜ |
+| 8 | 会計履歴 | `src/db/history.ts`、`src/components/history/*` | ✅ |
+| 9 | 返品 | `src/db/refunds.ts`、`SaleDetailPanel.tsx` | ✅ |
+| 10 | レジ締め | `src/db/closings.ts`、`src/lib/closing.ts`、`src/components/closing/*` | ✅ |
+| 11 | 帳簿と Excel 出力 | `src/db/ledger.ts`、`src/lib/ledgerExcel.ts`、`src/components/ledger/*` | ✅ |
 | 12 | 設定(暗証番号、バックアップ、古いデータの削除) | | ⬜ |
-| 13 | PWA と実機での確認 | | ⬜ |
+| 13 | スマホ対応(仕様書 §10.1) | | ⬜ |
+| 14 | PWA と実機での確認 | | ⬜ |

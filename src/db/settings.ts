@@ -45,3 +45,11 @@ export async function getSetting<K extends SettingKey>(db: AppDB, key: K): Promi
 export async function setSetting<K extends SettingKey>(db: AppDB, key: K, value: Settings[K]): Promise<void> {
   await db.settings.put({ key, value } as SettingRow)
 }
+
+/** Excel を出力した月('YYYY-MM')を記録する。古いデータの削除で使う(仕様書 F8) */
+export async function markExported(db: AppDB, months: string[]): Promise<void> {
+  await db.transaction('rw', db.settings, async () => {
+    const current = await getSetting(db, 'exportedMonths')
+    await setSetting(db, 'exportedMonths', [...new Set([...current, ...months])].sort())
+  })
+}
