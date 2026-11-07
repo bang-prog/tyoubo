@@ -16,16 +16,16 @@ type Props = {
   mode: LedgerMode
   rows: LedgerRow[]
   total: LedgerRow
-  /** 日別のとき、その日の Excel を出力する。渡すと各日の行にボタンが出る */
-  onDownloadDay?: (date: string) => void
-  /** 出力している日(ボタンを押せなくする) */
-  downloadingDay?: string | null
+  /** その行(日別なら1日、月別なら1か月)の Excel を出力する。渡すと各行にボタンが出る */
+  onDownloadRow?: (key: string) => void
+  /** 出力している行のキー(出力中はボタンを押せなくする) */
+  downloadingKey?: string | null
 }
 
-/** 日別・月別の売上の表。会計も返品もない日は「会計なし」とする。 */
-export default function LedgerTable({ mode, rows, total, onDownloadDay, downloadingDay }: Props) {
+/** 日別・月別の売上の表。会計も返品もない日(月)は「会計なし」とする。 */
+export default function LedgerTable({ mode, rows, total, onDownloadRow, downloadingKey }: Props) {
   if (rows.length === 0) return <p className="hint">この期間のデータはありません。</p>
-  const withDownload = mode === 'day' && Boolean(onDownloadDay)
+  const withDownload = Boolean(onDownloadRow)
   const columns = withDownload ? 8 : 7
 
   return (
@@ -64,11 +64,11 @@ export default function LedgerTable({ mode, rows, total, onDownloadDay, download
                     <button
                       type="button"
                       className={`btn btn-sm ${styles.download}`}
-                      onClick={() => onDownloadDay?.(r.key)}
-                      disabled={Boolean(downloadingDay)}
+                      onClick={() => onDownloadRow?.(r.key)}
+                      disabled={Boolean(downloadingKey)}
                       aria-label={`${rowLabel(mode, r.key)}の Excel をダウンロード`}
                     >
-                      {downloadingDay === r.key ? '作成中…' : '保存'}
+                      {downloadingKey === r.key ? '作成中…' : '保存'}
                     </button>
                   </td>
                 )}

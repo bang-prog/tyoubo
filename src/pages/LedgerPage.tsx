@@ -58,7 +58,7 @@ export default function LedgerPage() {
   const canGoNext = mode === 'day' ? month < thisMonth : year < thisYear
   const periodLabel = mode === 'day' ? `${month.slice(0, 4)}年${Number(month.slice(5))}月` : `${year}年`
 
-  /** 表示している期間(1か月・1年)か、日別の表で選んだ1日の Excel を出力する */
+  /** 表示している期間(1か月・1年)か、表で選んだ1日・1か月の Excel を出力する */
   async function exportLedger(exportMode: LedgerMode, exportPeriod: string) {
     if (exporting) return
     setExporting(exportPeriod)
@@ -134,10 +134,15 @@ export default function LedgerPage() {
                 mode={mode}
                 rows={data.rows}
                 total={data.total}
-                onDownloadDay={(date) => void exportLedger('date', date)}
-                downloadingDay={exporting}
+                // 日別の行は1日分、月別の行は1か月分(日別表示の「この月の Excel」と同じ中身)を出力する
+                onDownloadRow={(key) => void exportLedger(mode === 'day' ? 'date' : 'day', key)}
+                downloadingKey={exporting}
               />
-              {mode === 'day' && <p className="hint">各日の「保存」で、その日1日分の Excel を出力できます。</p>}
+              <p className="hint">
+                {mode === 'day'
+                  ? '各日の「保存」で、その日1日分の Excel を出力できます。'
+                  : '各月の「保存」で、その月1か月分の Excel を出力できます。'}
+              </p>
             </div>
             <div className="panel">
               <h3 className={styles.heading}>カテゴリー別の売上</h3>
