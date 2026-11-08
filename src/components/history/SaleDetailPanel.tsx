@@ -6,6 +6,7 @@ import { createRefund } from '../../db/refunds'
 import type { SaleItem } from '../../db/types'
 import { sizeLabel } from '../../lib/labels'
 import { formatYen, splitTax } from '../../lib/money'
+import { PAYMENT_LABELS, paymentMethodOf } from '../../lib/payment'
 import { formatBusinessDate, timeOf } from '../../lib/time'
 import styles from './SaleDetailPanel.module.css'
 
@@ -24,6 +25,8 @@ export default function SaleDetailPanel({ sale }: { sale: SaleDetail }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  const method = paymentMethodOf(sale)
+  const isCash = method === 'cash'
 
   const selected = sale.items
     .filter((item) => selection[item.id] && remainingOf(item) > 0)
@@ -70,7 +73,11 @@ export default function SaleDetailPanel({ sale }: { sale: SaleDetail }) {
       setSelection({})
       setConfirming(false)
       setMemo('')
-      setNotice(`${formatYen(refund.amountIncl)} の返品を記録しました。お客様に現金でお返しください。`)
+      setNotice(
+        isCash
+          ? `${formatYen(refund.amountIncl)} の返品を記録しました。お客様に現金でお返しください。`
+          : `${formatYen(refund.amountIncl)} の返品を記録しました。Square のアプリで${PAYMENT_LABELS[method]}の返金をしてください。`,
+      )
     } catch (e) {
       setError(userMessage(e))
     } finally {
@@ -164,12 +171,19 @@ export default function SaleDetailPanel({ sale }: { sale: SaleDetail }) {
         <dd className={`num ${styles.big}`}>{formatYen(sale.totalIncl)}</dd>
         <dt>税抜</dt>
         <dd className="num">{formatYen(sale.totalExcl)}</dd>
-        <dt>うち消費税(10%)</dt>
+        <dt>うち消費税</dt>
         <dd className="num">{formatYen(sale.taxAmount)}</dd>
-        <dt>お預かり</dt>
-        <dd className="num">{formatYen(sale.received)}</dd>
-        <dt>お釣り</dt>
-        <dd className="num">{formatYen(sale.change)}</dd>
+        <dt>支払い方法</dt>
+        <dd>{PAYMENT_LABELS[method]}</dd>
+        {/* お預かりとお釣りは現金のときだけ */}
+        {isCash && (
+          <>
+            <dt>お預かり</dt>
+            <dd className="num">{formatYen(sale.received)}</dd>
+            <dt>お釣り</dt>
+            <dd className="num">{formatYen(sale.change)}</dd>
+          </>
+        )}
       </dl>
 
       {sale.refunds.length > 0 && (
@@ -196,7 +210,10 @@ export default function SaleDetailPanel({ sale }: { sale: SaleDetail }) {
           <div className={styles.confirm}>
             <p>
               返金額 <b className={`num ${styles.refundAmount}`}>{formatYen(refundAmount)}</b>
-              (うち消費税 {formatYen(refundTax)})をお客様に現金でお返しし、在庫を戻します。
+              (うち消費税 {formatYen(refundTax)})
+              {isCash
+                ? 'をお客様に現金でお返しし、在庫を戻します。'
+                : `の返金を記録し、在庫を戻します。実際の返金は Square のアプリで${PAYMENT_LABELS[method]}の返金をしてください。`}
             </p>
             <label className={styles.memoField}>
               メモ(任意)

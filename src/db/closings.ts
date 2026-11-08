@@ -2,18 +2,23 @@
 
 import { countedTotal, DENOMINATIONS, differenceOf, expectedCash, MAX_COUNT } from '../lib/closing'
 import { MAX_RECEIVED } from '../lib/money'
+import { paymentMethodOf } from '../lib/payment'
 import { nowIso } from '../lib/time'
 import type { AppDB } from './db'
 import { ValidationError } from './errors'
 import { getSetting, setSetting } from './settings'
-import type { Closing, DenominationCounts } from './types'
+import type { Closing, DenominationCounts, Refund, Sale } from './types'
 
 export type ClosingDay = {
   businessDate: string
   /** その日の現金売上(税込) */
   cashSales: number
-  /** その日に行った返品の返金額 */
+  /** その日に現金で返した返金額 */
   refundsTotal: number
+  /** その日のキャッシュレスの売上(参考。レジの現金には含めない) */
+  cashlessSales: number
+  /** その日のキャッシュレスの返金(参考) */
+  cashlessRefunds: number
   /** 保存済みのレジ締め */
   saved?: Closing
   /** まだ保存していないときに入れておく準備金(前回の準備金) */
@@ -25,9 +30,16 @@ async function dayTotals(db: AppDB, businessDate: string) {
     db.sales.where('businessDate').equals(businessDate).toArray(),
     db.refunds.where('businessDate').equals(businessDate).toArray(),
   ])
+  // レジの現金に関係するのは、現金の会計と現金の返金だけ(仕様書 §5 F4)
+  const salesSum = (list: Sale[]) => list.reduce((t, s) => t + s.totalIncl, 0)
+  const refundsSum = (list: Refund[]) => list.reduce((t, r) => t + r.amountIncl, 0)
+  const cashSales = salesSum(sales.filter((s) => paymentMethodOf(s) === 'cash'))
+  const cashRefunds = refundsSum(refunds.filter((r) => paymentMethodOf(r) === 'cash'))
   return {
-    cashSales: sales.reduce((sum, s) => sum + s.totalIncl, 0),
-    refundsTotal: refunds.reduce((sum, r) => sum + r.amountIncl, 0),
+    cashSales,
+    refundsTotal: cashRefunds,
+    cashlessSales: salesSum(sales) - cashSales,
+    cashlessRefunds: refundsSum(refunds) - cashRefunds,
   }
 }
 

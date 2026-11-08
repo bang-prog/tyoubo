@@ -3,13 +3,15 @@
 
 import type { LedgerData, LedgerRow } from '../db/ledger'
 import { sizeLabel } from './labels'
+import { PAYMENT_LABELS, paymentMethodOf } from './payment'
 import { formatBusinessDate, timeOf } from './time'
 
 const YEN = '#,##0'
 const PERCENT = '0.0%'
 
 type Column = { header: string; width: number; format?: string }
-type Cell = string | number
+/** null は空欄 */
+type Cell = string | number | null
 
 /** ファイル名。1か月分は 帳簿_2026-11.xlsx、1年分は 帳簿_2026.xlsx、1日分は 帳簿_2026-11-07.xlsx */
 export function ledgerFileName(data: LedgerData): string {
@@ -75,6 +77,7 @@ export async function buildLedgerWorkbook(data: LedgerData): Promise<ArrayBuffer
       { header: '会計番号', width: 16 },
       { header: '日付', width: 12 },
       { header: '時刻', width: 8 },
+      { header: '支払い方法', width: 16 },
       { header: '点数', width: 8 },
       { header: '合計(税込)', width: 14, format: YEN },
       { header: '税抜', width: 14, format: YEN },
@@ -86,12 +89,14 @@ export async function buildLedgerWorkbook(data: LedgerData): Promise<ArrayBuffer
       s.saleNo,
       s.businessDate,
       timeOf(s.soldAt),
+      PAYMENT_LABELS[paymentMethodOf(s)],
       s.items.reduce((sum, i) => sum + i.qty, 0),
       s.totalIncl,
       s.totalExcl,
       s.taxAmount,
-      s.received,
-      s.change,
+      // お預かりとお釣りは現金のときだけ(キャッシュレスは空欄)
+      paymentMethodOf(s) === 'cash' ? s.received : null,
+      paymentMethodOf(s) === 'cash' ? s.change : null,
     ]),
   )
 
@@ -137,6 +142,7 @@ export async function buildLedgerWorkbook(data: LedgerData): Promise<ArrayBuffer
       { header: '元の会計番号', width: 16 },
       { header: '返品した商品', width: 40 },
       { header: '点数', width: 8 },
+      { header: '返金方法', width: 16 },
       { header: '返金額(税込)', width: 14, format: YEN },
       { header: '税抜', width: 14, format: YEN },
       { header: '消費税', width: 12, format: YEN },
@@ -152,6 +158,7 @@ export async function buildLedgerWorkbook(data: LedgerData): Promise<ArrayBuffer
         )
         .join('、'),
       r.items.reduce((sum, i) => sum + i.qty, 0),
+      PAYMENT_LABELS[paymentMethodOf(r)],
       r.amountIncl,
       r.amountExcl,
       r.taxAmount,
@@ -174,7 +181,25 @@ export async function buildLedgerWorkbook(data: LedgerData): Promise<ArrayBuffer
     ['合計', categoryQty, categoryAmount, categoryAmount ? 1 : 0],
   )
 
-  // 6. レジ締め
+  // 6. 支払い方法別
+  const paymentTotal = data.payments.reduce(
+    (t, p) => ({ count: t.count + p.count, sales: t.sales + p.salesIncl, refund: t.refund + p.refundIncl }),
+    { count: 0, sales: 0, refund: 0 },
+  )
+  addSheet(
+    '支払い方法別',
+    [
+      { header: '支払い方法', width: 18 },
+      { header: '件数', width: 8 },
+      { header: '売上(税込)', width: 14, format: YEN },
+      { header: '返金(税込)', width: 14, format: YEN },
+      { header: '差引売上', width: 14, format: YEN },
+    ],
+    data.payments.map((p) => [PAYMENT_LABELS[p.method], p.count, p.salesIncl, p.refundIncl, p.netIncl]),
+    ['合計', paymentTotal.count, paymentTotal.sales, paymentTotal.refund, paymentTotal.sales - paymentTotal.refund],
+  )
+
+  // 7. レジ締め
   addSheet(
     'レジ締め',
     [

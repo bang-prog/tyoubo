@@ -1,6 +1,7 @@
 // 返品の保存(仕様書 §5 F3、§9)。
 
 import { newId } from '../lib/id'
+import { paymentMethodOf } from '../lib/payment'
 import { taxOf } from '../lib/money'
 import { businessDateOf, nowIso } from '../lib/time'
 import type { AppDB } from './db'
@@ -78,6 +79,8 @@ export async function createRefund(
         taxAmount,
         amountExcl: amountIncl - taxAmount,
         memo: input.memo?.trim() ?? '',
+        // 返金は元の会計と同じ方法で行う(キャッシュレスは Square のアプリで返金する)
+        paymentMethod: paymentMethodOf(sale),
       }
 
       await db.refunds.add(refund)

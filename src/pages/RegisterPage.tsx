@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useState } from 'react'
+import CashlessDialog from '../components/CashlessDialog'
 import ChangeDialog from '../components/ChangeDialog'
 import PayDialog from '../components/PayDialog'
 import CartPanel from '../components/register/CartPanel'
@@ -15,14 +16,18 @@ import { getSetting } from '../db/settings'
 import type { Variant } from '../db/types'
 import { buildCartView, cartViewTotal } from '../lib/cart'
 import { formatYen } from '../lib/money'
+import type { PaymentMethod } from '../lib/payment'
 import { sizeLabel } from '../lib/labels'
 import { useCart } from '../state/CartContext'
 import styles from './RegisterPage.module.css'
 
-type Done = { saleNo: string; total: number; received: number; change: number }
+type Done = { saleNo: string; total: number; received: number; change: number; paymentMethod: PaymentMethod }
 type Toast = { text: string; warn: boolean }
 
-/** 会計画面(仕様書 §5 F2)。商品を選んでカートに入れ、お預かりを入力して会計を確定する。 */
+/**
+ * 会計画面(仕様書 §5 F2)。商品を選んでカートに入れ、支払い方法を選んで会計を確定する。
+ * 現金はお預かりを電卓で入力する。キャッシュレスは Square で決済したあと、確認画面で確定する。
+ */
 export default function RegisterPage() {
   const catalog = useLiveQuery(() => loadCatalog(db), [])
   // 最後のバックアップから7日以上たったら、上に注意を出す(仕様書 §5 F2)
@@ -34,6 +39,8 @@ export default function RegisterPage() {
   const { lines, dispatch } = useCart()
   const [pickingId, setPickingId] = useState<string | null>(null)
   const [paying, setPaying] = useState(false)
+  /** 支払い方法。会計が終わるたびに現金に戻す */
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
   const [saving, setSaving] = useState(false)
   const [payError, setPayError] = useState<string | null>(null)
   const [done, setDone] = useState<Done | null>(null)
@@ -84,11 +91,18 @@ export default function RegisterPage() {
     setSaving(true)
     setPayError(null)
     try {
-      const sale = await createSale(db, { lines, received, expectedTotal: total })
+      const sale = await createSale(db, { lines, paymentMethod, received, expectedTotal: total })
       dispatch({ type: 'clear' })
       setPaying(false)
       setCartOpen(false)
-      setDone({ saleNo: sale.saleNo, total: sale.totalIncl, received: sale.received, change: sale.change })
+      setPaymentMethod('cash')
+      setDone({
+        saleNo: sale.saleNo,
+        total: sale.totalIncl,
+        received: sale.received,
+        change: sale.change,
+        paymentMethod: paymentMethod,
+      })
     } catch (e) {
       // 保存できなかったときはカートを消さず、電卓の画面にエラーを出す
       setPayError(userMessage(e))
@@ -119,6 +133,8 @@ export default function RegisterPage() {
             items={items}
             total={total}
             taxRate={taxRate}
+            paymentMethod={paymentMethod}
+            onPaymentMethodChange={setPaymentMethod}
             onIncrement={(item) => addOne(item.variantId, item.productName, item.stock)}
             onDecrement={(item) => dispatch({ type: 'decrement', variantId: item.variantId })}
             onClear={() => dispatch({ type: 'clear' })}
@@ -154,7 +170,18 @@ export default function RegisterPage() {
         />
       )}
 
-      {paying && (
+      {paying && paymentMethod !== 'cash' && (
+        <CashlessDialog
+          method={paymentMethod}
+          total={total}
+          busy={saving}
+          error={payError}
+          onCancel={() => setPaying(false)}
+          onConfirm={() => void confirmSale(0)}
+        />
+      )}
+
+      {paying && paymentMethod === 'cash' && (
         <PayDialog
           total={total}
           busy={saving}

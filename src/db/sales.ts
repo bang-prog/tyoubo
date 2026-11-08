@@ -1,6 +1,7 @@
 // 会計の保存(仕様書 §5 F2、§9)。
 
 import { newId } from '../lib/id'
+import { isPaymentMethod, type PaymentMethod } from '../lib/payment'
 import { calcChange, cartTotal, lineTotal, MAX_RECEIVED, taxOf } from '../lib/money'
 import { businessDateOf, nowIso } from '../lib/time'
 import type { AppDB } from './db'
@@ -12,7 +13,9 @@ export type SaleLineInput = { variantId: string; qty: number }
 
 export type CreateSaleInput = {
   lines: SaleLineInput[]
-  /** お預かり */
+  /** 支払い方法。省略すると現金 */
+  paymentMethod?: PaymentMethod
+  /** お預かり(現金のとき)。キャッシュレスでは使わず、合計と同じ金額を記録する */
   received: number
   /** 画面に表示していた合計。保存の直前に計算し直した合計と違えば保存しない */
   expectedTotal: number
@@ -39,7 +42,10 @@ export async function createSale(
   for (const line of input.lines) {
     if (!Number.isSafeInteger(line.qty) || line.qty < 1) throw new ValidationError('数量が正しくありません')
   }
-  if (!Number.isSafeInteger(input.received) || input.received < 0 || input.received > MAX_RECEIVED) {
+  const paymentMethod = input.paymentMethod ?? 'cash'
+  if (!isPaymentMethod(paymentMethod)) throw new ValidationError('支払い方法が正しくありません')
+  const isCash = paymentMethod === 'cash'
+  if (isCash && (!Number.isSafeInteger(input.received) || input.received < 0 || input.received > MAX_RECEIVED)) {
     throw new ValidationError('お預かりの金額が正しくありません')
   }
 
@@ -76,7 +82,9 @@ export async function createSale(
     if (totalIncl !== input.expectedTotal) {
       throw new ValidationError('商品の価格が変わったため、合計が変わりました。カートの合計を確認してください')
     }
-    const result = calcChange(input.received, totalIncl)
+    // キャッシュレスは Square で合計ちょうどを受けているので、お預かり = 合計、お釣り = 0 とする
+    const received = isCash ? input.received : totalIncl
+    const result = calcChange(received, totalIncl)
     if (!result.ok) throw new ValidationError('お預かりが足りません')
 
     const taxAmount = taxOf(totalIncl, await getSetting(db, 'taxRate'))
@@ -89,8 +97,9 @@ export async function createSale(
       totalIncl,
       taxAmount,
       totalExcl: totalIncl - taxAmount,
-      received: input.received,
+      received,
       change: result.change,
+      paymentMethod,
     }
 
     await db.sales.add(sale)

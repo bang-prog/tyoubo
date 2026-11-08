@@ -1,5 +1,6 @@
 import type { SaleDetail } from '../../db/history'
 import { formatYen } from '../../lib/money'
+import { PAYMENT_SHORT_LABELS, paymentMethodOf } from '../../lib/payment'
 import { timeOf } from '../../lib/time'
 import styles from './SaleList.module.css'
 
@@ -9,7 +10,7 @@ type Props = {
   onSelect: (id: string) => void
 }
 
-/** その日の会計の一覧。時刻、商品、点数、合計を表示する。 */
+/** その日の会計の一覧。時刻、商品、支払い方法、点数、合計を表示する。 */
 export default function SaleList({ sales, selectedId, onSelect }: Props) {
   return (
     <ul className={styles.list}>
@@ -32,7 +33,7 @@ export default function SaleList({ sales, selectedId, onSelect }: Props) {
                   {sale.items.length > 1 && ' ほか'}
                 </span>
                 <small>
-                  {count}点・No.{sale.saleNo}
+                  {PAYMENT_SHORT_LABELS[paymentMethodOf(sale)]}・{count}点・No.{sale.saleNo}
                 </small>
               </span>
               <span className={`num ${styles.total}`}>

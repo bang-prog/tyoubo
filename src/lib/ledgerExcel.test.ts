@@ -12,13 +12,14 @@ import { getSetting, markExported } from '../db/settings'
 import { buildLedgerWorkbook, exportedMonthsOf, ledgerFileName } from './ledgerExcel'
 
 let db: AppDB
+let variantId: string
 const at = (d: number, h = 12) => new Date(2026, 10, d, h)
 
 beforeEach(async () => {
   db = createDB(`test-${crypto.randomUUID()}`)
   const tops = await addCategory(db, 'トップス')
   await saveProduct(db, { name: 'シャツ', categoryId: tops, priceIncl: 6980, cost: 0, sizes: ['M'], colors: ['白'], stocks: [{ size: 'M', color: '白', stock: 10 }] })
-  const variantId = (await loadCatalog(db)).products[0].variants[0].id
+  variantId = (await loadCatalog(db)).products[0].variants[0].id
   const sale = await createSale(db, { lines: [{ variantId, qty: 2 }], received: 20000, expectedTotal: 13960 }, at(2))
   await createRefund(db, { saleId: sale.id, items: [{ saleItemId: sale.items[0].id, qty: 1 }], memo: '色違い' }, at(3))
   await saveClosing(db, { businessDate: '2026-11-02', openingFloat: 30000, counts: { '10000': 4, '1000': 3 }, memo: '' }, at(2, 19))
@@ -35,10 +36,10 @@ async function readBack(buffer: ArrayBuffer) {
 }
 
 describe('buildLedgerWorkbook', () => {
-  it('6つのシートがあり、金額は数値で「#,##0」の形', async () => {
+  it('7つのシートがあり、金額は数値で「#,##0」の形', async () => {
     const data = await loadLedger(db, 'day', '2026-11', '2026-11-07')
     const wb = await readBack(await buildLedgerWorkbook(data))
-    expect(wb.worksheets.map((ws) => ws.name)).toEqual(['集計', '会計一覧', '売上明細', '返品', 'カテゴリー別', 'レジ締め'])
+    expect(wb.worksheets.map((ws) => ws.name)).toEqual(['集計', '会計一覧', '売上明細', '返品', 'カテゴリー別', '支払い方法別', 'レジ締め'])
 
     const summary = wb.getWorksheet('集計')!
     // 見出し + 11/1〜11/7 の7行 + 合計
@@ -61,13 +62,33 @@ describe('buildLedgerWorkbook', () => {
     const refund = wb.getWorksheet('返品')!.getRow(2)
     expect(refund.getCell(3).value).toBe('20261102-001')
     expect(refund.getCell(4).value).toBe('シャツ(白/M)×1')
-    expect(refund.getCell(9).value).toBe('色違い')
+    expect(refund.getCell(6).value).toBe('現金') // 返金方法
+    expect(refund.getCell(10).value).toBe('色違い')
     const closing = wb.getWorksheet('レジ締め')!.getRow(2)
     expect(closing.getCell(5).value).toBe(43960) // 30,000 + 13,960
     expect(closing.getCell(7).value).toBe(-960) // 数えたのは 43,000。43,000 − 43,960
     const category = wb.getWorksheet('カテゴリー別')!.getRow(2)
     expect(category.getCell(4).value).toBe(1)
     expect(category.getCell(4).numFmt).toBe('0.0%')
+  })
+})
+
+describe('支払い方法', () => {
+  it('会計一覧に支払い方法を出し、キャッシュレスはお預かりとお釣りを空欄にする。支払い方法別のシートで集計する', async () => {
+    await createSale(db, { lines: [{ variantId, qty: 1 }], paymentMethod: 'qr', received: 0, expectedTotal: 6980 }, at(4))
+    const data = await loadLedger(db, 'day', '2026-11', '2026-11-07')
+    const wb = await readBack(await buildLedgerWorkbook(data))
+
+    const list = wb.getWorksheet('会計一覧')!
+    expect(list.getRow(1).getCell(4).value).toBe('支払い方法')
+    expect(list.getRow(2).values).toEqual([undefined, '20261102-001', '2026-11-02', '12:00', '現金', 2, 13960, 12691, 1269, 20000, 6040])
+    // 空欄のセルは values に入らない
+    expect(list.getRow(3).values).toEqual([undefined, '20261104-001', '2026-11-04', '12:00', 'QRコード', 1, 6980, 6346, 634])
+
+    const payments = wb.getWorksheet('支払い方法別')!
+    expect(payments.getRow(2).values).toEqual([undefined, '現金', 1, 13960, 6980, 6980])
+    expect(payments.getRow(3).values).toEqual([undefined, 'QRコード', 1, 6980, 0, 6980])
+    expect(payments.getRow(4).values).toEqual([undefined, '合計', 2, 20940, 6980, 13960])
   })
 })
 

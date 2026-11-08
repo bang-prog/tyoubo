@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router'
 import CategoryTable from '../components/ledger/CategoryTable'
 import LedgerSummary from '../components/ledger/LedgerSummary'
 import LedgerTable from '../components/ledger/LedgerTable'
+import PaymentTable from '../components/ledger/PaymentTable'
 import PurgeDialog from '../components/ledger/PurgeDialog'
 import { db } from '../db/db'
 import { userMessage } from '../db/errors'
@@ -145,9 +146,15 @@ export default function LedgerPage() {
                   : '各月の「保存」で、その月1か月分の Excel を出力できます。'}
               </p>
             </div>
-            <div className="panel">
-              <h3 className={styles.heading}>カテゴリー別の売上</h3>
-              <CategoryTable categories={data.categories} />
+            <div className={styles.side}>
+              <div className="panel">
+                <h3 className={styles.heading}>支払い方法別の売上</h3>
+                <PaymentTable payments={data.payments} />
+              </div>
+              <div className="panel">
+                <h3 className={styles.heading}>カテゴリー別の売上</h3>
+                <CategoryTable categories={data.categories} />
+              </div>
             </div>
           </div>
         </>

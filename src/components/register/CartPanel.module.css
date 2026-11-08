@@ -146,3 +146,29 @@
   min-height: 64px;
   font-size: 19px;
 }
+
+/* 支払い方法の切り替え(現金 / カード / 電子マネー / QR) */
+.methods {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.methods button {
+  min-height: 44px;
+  padding: 0 2px;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.methods button[aria-pressed='true'] {
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}

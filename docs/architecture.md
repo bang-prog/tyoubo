@@ -68,6 +68,7 @@ flowchart TB
     cartlib["cart.ts<br/>カートの計算"]
     time["time.ts<br/>日時・営業日"]
     util["id.ts・pin.ts・storage.ts<br/>id・ハッシュ化・保存状態"]
+    pay["payment.ts<br/>支払い方法"]
   end
 
   idb[("IndexedDB")]
@@ -86,6 +87,7 @@ flowchart TB
   keep --> schema
   keep --> util
   sales -- "id を作る" --> util
+  sales --> pay
   sales --> money
   sales --> time
   schema --> idb
@@ -97,7 +99,7 @@ flowchart TB
 | `src/components` | 画面の部品 | `AppShell`、`Modal`、`PayDialog`(電卓)、`ChangeDialog`(完了)、`register/*`、`products/*`、`pin/*`(暗証番号)、`settings/*` |
 | `src/state` | タブを切り替えても残す状態 | `CartProvider`(カート) |
 | `src/db` | データの保存・読み込み。入力のチェックとトランザクションもここ | `db.ts`、`catalog.ts`、`sales.ts`、`settings.ts`、`pin.ts`、`backup.ts`、`purge.ts`、`errors.ts` |
-| `src/lib` | 計算だけの関数 | `money.ts`、`cashInput.ts`、`cart.ts`、`time.ts`、`labels.ts`、`id.ts`(id を作る)、`pin.ts`(ハッシュ化)、`storage.ts`(保存状態) |
+| `src/lib` | 計算だけの関数 | `money.ts`、`cashInput.ts`、`cart.ts`、`time.ts`、`labels.ts`、`payment.ts`(支払い方法)、`id.ts`(id を作る)、`pin.ts`(ハッシュ化)、`storage.ts`(保存状態) |
 | `src/styles` | 色・文字・共通の部品の見た目 | `global.css` |
 
 **決まりごと**
@@ -202,6 +204,7 @@ erDiagram
     number taxAmount
     number received
     number change
+    string paymentMethod "cash・card・emoney・qr"
   }
   saleItems {
     string id PK
@@ -217,6 +220,7 @@ erDiagram
     string saleId FK
     string businessDate "返品した日"
     number amountIncl
+    string paymentMethod "元の会計と同じ"
   }
   refundItems {
     string id PK

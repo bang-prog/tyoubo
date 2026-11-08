@@ -110,3 +110,11 @@
   flex-wrap: wrap;
   padding-top: 8px;
 }
+
+/* 右の列(支払い方法別とカテゴリー別を縦に並べる) */
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}

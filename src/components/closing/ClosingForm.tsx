@@ -140,7 +140,7 @@ export default function ClosingForm({ day, notice, onSaved, afterSave }: Props) 
           </dt>
           <dd className="num">{formatYen(day.cashSales)}</dd>
           <dt>
-            <span className={styles.op}>−</span>今日の返金
+            <span className={styles.op}>−</span>今日の現金の返金
           </dt>
           <dd className="num">{formatYen(day.refundsTotal)}</dd>
           <dt className={styles.strong}>
@@ -150,6 +150,13 @@ export default function ClosingForm({ day, notice, onSaved, afterSave }: Props) 
           <dt className={styles.strong}>数えた現金</dt>
           <dd className={`num ${styles.strong}`}>{formatYen(counted)}</dd>
         </dl>
+        {(day.cashlessSales > 0 || day.cashlessRefunds > 0) && (
+          <p className="hint">
+            参考:今日のキャッシュレスの売上 {formatYen(day.cashlessSales)}
+            {day.cashlessRefunds > 0 && `(返金 ${formatYen(day.cashlessRefunds)})`}
+            。Square で受けた分なので、レジの現金には含めません。
+          </p>
+        )}
 
         {started ? (
           <div className={`${styles.diff} ${styles[status]}`} role="status">

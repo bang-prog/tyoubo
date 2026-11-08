@@ -1,4 +1,6 @@
 // 各テーブルに保存するデータの型(仕様書 §8)。
+import type { PaymentMethod } from '../lib/payment'
+
 // 金額はすべて円単位の整数。日時は ISO 8601 形式の文字列、営業日は 'YYYY-MM-DD'。
 
 export type Category = {
@@ -46,8 +48,12 @@ export type Sale = {
   totalIncl: number
   taxAmount: number
   totalExcl: number
+  /** お預かり。キャッシュレスでは合計と同じ */
   received: number
+  /** お釣り。キャッシュレスでは0 */
   change: number
+  /** 支払い方法。v1.3 までのデータにはなく、現金として扱う(paymentMethodOf を使う) */
+  paymentMethod?: PaymentMethod
 }
 
 /** 会計の明細。商品名などは会計した時点の値を書き写しておく */
@@ -79,6 +85,8 @@ export type Refund = {
   taxAmount: number
   amountExcl: number
   memo: string
+  /** 返金の方法。元の会計と同じ。ないときは現金(paymentMethodOf を使う) */
+  paymentMethod?: PaymentMethod
 }
 
 export type RefundItem = {

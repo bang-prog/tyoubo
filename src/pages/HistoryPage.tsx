@@ -63,8 +63,12 @@ export default function HistoryPage() {
               <dd className="num">{day.sales.length}件</dd>
             </div>
             <div>
-              <dt>現金売上</dt>
+              <dt>売上</dt>
               <dd className="num">{formatYen(day.salesTotal)}</dd>
+            </div>
+            <div>
+              <dt>うち現金</dt>
+              <dd className="num">{formatYen(day.cashTotal)}</dd>
             </div>
             <div>
               <dt>返金</dt>

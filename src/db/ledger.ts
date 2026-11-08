@@ -1,5 +1,6 @@
 // 帳簿の集計(仕様書 §5 F5)。
 
+import { PAYMENT_METHODS, paymentMethodOf, type PaymentMethod } from '../lib/payment'
 import { addDays, businessDateOf } from '../lib/time'
 import type { AppDB } from './db'
 import type { Closing, Refund, RefundItem, Sale, SaleItem } from './types'
@@ -35,6 +36,16 @@ export type CategoryRow = {
   share: number
 }
 
+/** 支払い方法ごとの集計。返金は返品した日で数える */
+export type PaymentRow = {
+  method: PaymentMethod
+  count: number
+  salesIncl: number
+  refundIncl: number
+  /** 差引売上 = 売上 − 返金 */
+  netIncl: number
+}
+
 export type LedgerSale = Sale & { items: SaleItem[] }
 export type LedgerRefund = Refund & {
   saleNo: string
@@ -49,6 +60,8 @@ export type LedgerData = {
   total: LedgerRow
   /** 売上(税込)の大きい順 */
   categories: CategoryRow[]
+  /** 支払い方法ごと。現金・カード・電子マネー・QR の順。会計も返金もない方法は入れない */
+  payments: PaymentRow[]
   /** Excel の明細用 */
   sales: LedgerSale[]
   refunds: LedgerRefund[]
@@ -152,6 +165,20 @@ export async function loadLedger(
     .map((c) => ({ ...c, share: categoryTotal ? c.amountIncl / categoryTotal : 0 }))
     .sort((a, b) => b.amountIncl - a.amountIncl || a.name.localeCompare(b.name, 'ja'))
 
+  // ---------- 支払い方法別 ----------
+  const byMethod = new Map<PaymentMethod, PaymentRow>(
+    PAYMENT_METHODS.map((method) => [method, { method, count: 0, salesIncl: 0, refundIncl: 0, netIncl: 0 }]),
+  )
+  for (const s of sales) {
+    const row = byMethod.get(paymentMethodOf(s))!
+    row.count += 1
+    row.salesIncl += s.totalIncl
+  }
+  for (const r of refunds) byMethod.get(paymentMethodOf(r))!.refundIncl += r.amountIncl
+  const payments = [...byMethod.values()]
+    .filter((p) => p.count > 0 || p.refundIncl > 0)
+    .map((p) => ({ ...p, netIncl: p.salesIncl - p.refundIncl }))
+
   // ---------- Excel の明細 ----------
   const itemsBySale = new Map<string, SaleItem[]>()
   for (const item of saleItems) {
@@ -179,6 +206,7 @@ export async function loadLedger(
     rows: sortedRows,
     total,
     categories,
+    payments,
     sales: ledgerSales,
     refunds: ledgerRefunds,
     closings: closings.sort((a, b) => a.businessDate.localeCompare(b.businessDate)),

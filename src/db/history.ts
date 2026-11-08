@@ -1,5 +1,6 @@
 // 会計履歴の読み込み(仕様書 §5 F3)。
 
+import { paymentMethodOf } from '../lib/payment'
 import type { AppDB } from './db'
 import type { Refund, Sale, SaleItem } from './types'
 
@@ -14,8 +15,10 @@ export type DayHistory = {
   businessDate: string
   /** 時刻の新しい順 */
   sales: SaleDetail[]
-  /** その日の現金売上(税込) */
+  /** その日の売上(税込)。現金とキャッシュレスの合計 */
   salesTotal: number
+  /** そのうち現金の売上 */
+  cashTotal: number
   /** その日に行った返品の返金額。元の会計の日ではなく、返品した日で数える */
   refundsTotal: number
 }
@@ -47,6 +50,7 @@ export async function loadDayHistory(db: AppDB, businessDate: string): Promise<D
     businessDate,
     sales: details,
     salesTotal: sales.reduce((sum, s) => sum + s.totalIncl, 0),
+    cashTotal: sales.filter((s) => paymentMethodOf(s) === 'cash').reduce((sum, s) => sum + s.totalIncl, 0),
     refundsTotal: dayRefunds.reduce((sum, r) => sum + r.amountIncl, 0),
   }
 }

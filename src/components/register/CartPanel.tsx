@@ -1,6 +1,7 @@
 import type { CartItemView } from '../../lib/cart'
 import { sizeLabel } from '../../lib/labels'
 import { formatYen, splitTax } from '../../lib/money'
+import { PAYMENT_LABELS, PAYMENT_METHODS, PAYMENT_SHORT_LABELS, type PaymentMethod } from '../../lib/payment'
 import styles from './CartPanel.module.css'
 
 type Props = {
@@ -10,14 +11,28 @@ type Props = {
   onDecrement: (item: CartItemView) => void
   onClear: () => void
   onPay: () => void
+  /** 選んでいる支払い方法(仕様書 §5 F2) */
+  paymentMethod: PaymentMethod
+  onPaymentMethodChange: (method: PaymentMethod) => void
   /** 消費税率(%)。読み込み中は undefined */
   taxRate?: number
   /** スマホで下から開いたカートを閉じる(PC・iPad では「閉じる」は出ない) */
   onClose?: () => void
 }
 
-/** 会計画面の右側(スマホでは下から開く)。カートの中身と合計、「お預かり金額を入力」ボタン。 */
-export default function CartPanel({ items, total, onIncrement, onDecrement, onClear, onPay, taxRate, onClose }: Props) {
+/** 会計画面の右側(スマホでは下から開く)。カートの中身と合計、支払い方法、会計に進むボタン。 */
+export default function CartPanel({
+  items,
+  total,
+  onIncrement,
+  onDecrement,
+  onClear,
+  onPay,
+  paymentMethod,
+  onPaymentMethodChange,
+  taxRate,
+  onClose,
+}: Props) {
   const { tax, excl } = splitTax(total, taxRate)
   const count = items.reduce((sum, i) => sum + i.qty, 0)
   const hasUnavailable = items.some((i) => !i.available)
@@ -99,13 +114,28 @@ export default function CartPanel({ items, total, onIncrement, onDecrement, onCl
 
       {hasUnavailable && <p className="error">削除された商品がカートに入っています。「−」で外してください。</p>}
 
+      {/* 支払い方法。キャッシュレスの決済は Square のアプリで行い、ここでは記録だけをする */}
+      <div className={styles.methods} role="group" aria-label="支払い方法">
+        {PAYMENT_METHODS.map((m) => (
+          <button
+            key={m}
+            type="button"
+            aria-pressed={paymentMethod === m}
+            aria-label={PAYMENT_LABELS[m]}
+            onClick={() => onPaymentMethodChange(m)}
+          >
+            {PAYMENT_SHORT_LABELS[m]}
+          </button>
+        ))}
+      </div>
+
       <button
         type="button"
         className={`btn btn-primary ${styles.pay}`}
         onClick={onPay}
         disabled={items.length === 0 || hasUnavailable}
       >
-        お預かり金額を入力
+        {paymentMethod === 'cash' ? 'お預かり金額を入力' : `${PAYMENT_LABELS[paymentMethod]}で会計`}
       </button>
     </aside>
   )
