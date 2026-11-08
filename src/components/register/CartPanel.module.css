@@ -19,6 +19,22 @@
   font-size: 18px;
 }
 
+.headButtons {
+  display: flex;
+  gap: 8px;
+}
+
+/* 「閉じる」はスマホで下から開いたときだけ */
+.close {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .close {
+    display: inline-flex;
+  }
+}
+
 .list {
   flex: 1;
   min-height: 80px;

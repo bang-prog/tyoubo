@@ -31,41 +31,32 @@ export default function VariantDialog({ product, onPick, onClose }: Props) {
         </div>
         <p className="hint">色とサイズを選ぶと、お会計に追加されます。</p>
 
-        <div className={styles.tableWrap}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th />
-                {product.sizes.map((size) => (
-                  <th key={size}>{sizeLabel(size)}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {product.colors.map((color) => (
-                <tr key={color}>
-                  <th className={styles.color}>{color}</th>
-                  {product.sizes.map((size) => {
-                    const v = find(size, color)
-                    return (
-                      <td key={size}>
-                        {v && (
-                          <button
-                            type="button"
-                            className={v.stock > 0 ? styles.cell : `${styles.cell} ${styles.zero}`}
-                            onClick={() => onPick(v)}
-                          >
-                            <span className={styles.size}>{sizeLabel(size)}</span>
-                            <small className="num">在庫 {v.stock}</small>
-                          </button>
-                        )}
-                      </td>
+        {/* 色ごとに、サイズのボタンを画面の幅で折り返して並べる(スマホでも横スクロールしない) */}
+        <div className={styles.groups}>
+          {product.colors.map((color) => (
+            <section key={color} className={styles.group} aria-label={color}>
+              <h3 className={styles.color}>{color}</h3>
+              <div className={styles.cells}>
+                {product.sizes.map((size) => {
+                  const v = find(size, color)
+                  return (
+                    v && (
+                      <button
+                        key={size}
+                        type="button"
+                        className={v.stock > 0 ? styles.cell : `${styles.cell} ${styles.zero}`}
+                        onClick={() => onPick(v)}
+                        aria-label={`${color} ${sizeLabel(size)}(在庫 ${v.stock})`}
+                      >
+                        <span className={styles.size}>{sizeLabel(size)}</span>
+                        <small className="num">在庫 {v.stock}</small>
+                      </button>
                     )
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  )
+                })}
+              </div>
+            </section>
+          ))}
         </div>
       </div>
     </Modal>

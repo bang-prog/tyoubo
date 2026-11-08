@@ -97,8 +97,8 @@ export default function SaleDetailPanel({ sale }: { sale: SaleDetail }) {
                 </th>
               )}
               <th>商品</th>
-              <th className={styles.r}>単価</th>
-              <th className={styles.r}>数量</th>
+              <th className={`${styles.r} ${styles.wide}`}>単価</th>
+              <th className={`${styles.r} ${styles.wide}`}>数量</th>
               <th className={styles.r}>金額</th>
             </tr>
           </thead>
@@ -126,6 +126,10 @@ export default function SaleDetailPanel({ sale }: { sale: SaleDetail }) {
                       {item.color} / {sizeLabel(item.size)}
                       {item.categoryName && `・${item.categoryName}`}
                     </span>
+                    {/* スマホでは単価と数量の列を省き、ここにまとめて出す */}
+                    <span className={`num ${styles.variant} ${styles.narrow}`}>
+                      {formatYen(item.unitPriceIncl)} × {item.qty}
+                    </span>
                     {item.returnedQty > 0 && (
                       <span className="badge badge-bad">
                         {item.returnedQty === item.qty ? '返品済み' : `${item.returnedQty}点返品済み`}
@@ -145,8 +149,8 @@ export default function SaleDetailPanel({ sale }: { sale: SaleDetail }) {
                       </span>
                     )}
                   </td>
-                  <td className={`num ${styles.r}`}>{formatYen(item.unitPriceIncl)}</td>
-                  <td className={`num ${styles.r}`}>{item.qty}</td>
+                  <td className={`num ${styles.r} ${styles.wide}`}>{formatYen(item.unitPriceIncl)}</td>
+                  <td className={`num ${styles.r} ${styles.wide}`}>{item.qty}</td>
                   <td className={`num ${styles.r} ${styles.amount}`}>{formatYen(item.lineTotal)}</td>
                 </tr>
               )

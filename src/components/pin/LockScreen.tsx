@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { db } from '../../db/db'
 import { userMessage } from '../../db/errors'
 import { disablePin, verifyPin, verifyRecoveryCode } from '../../db/pin'
+import { PIN_UNSUPPORTED_MESSAGE, pinSupported } from '../../lib/pin'
 import PinPad from './PinPad'
 import { useLockout } from './useLockout'
 import styles from './LockScreen.module.css'
@@ -47,7 +48,11 @@ export default function LockScreen({ onUnlock }: { onUnlock: () => void }) {
     <main className={styles.screen}>
       <div className={styles.box}>
         <h1 className={styles.brand}>レジ帳簿</h1>
-        {mode === 'pin' ? (
+        {!pinSupported() ? (
+          <p className="error" role="alert">
+            {PIN_UNSUPPORTED_MESSAGE}
+          </p>
+        ) : mode === 'pin' ? (
           <>
             <p className={styles.lead}>暗証番号を入力してください</p>
             <PinPad value={pin} onChange={setPin} onSubmit={() => void submitPin()} disabled={busy || locked} submitLabel="解除" />

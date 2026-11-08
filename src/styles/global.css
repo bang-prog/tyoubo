@@ -28,6 +28,8 @@
   /* 画面の左右の余白。iPad などの端の切り欠き(セーフエリア)も避ける */
   --gutter-left: max(16px, env(safe-area-inset-left, 0px));
   --gutter-right: max(16px, env(safe-area-inset-right, 0px));
+  /* 各画面の下の余白に足すセーフエリア。スマホでは下のタブバーがホームバーをよけるので 0 にする */
+  --page-safe-bottom: env(safe-area-inset-bottom, 0px);
 
   color-scheme: light;
 }
@@ -186,6 +188,8 @@ a {
 .input {
   width: 100%;
   min-height: 48px;
+  /* iPhone の Safari は 16px 未満の入力欄をタップすると画面を拡大するので、16px にする(仕様書 §10.1) */
+  font-size: 16px;
   padding: 0 12px;
   border-radius: 10px;
   border: 1px solid var(--line);
@@ -255,4 +259,11 @@ a {
 .badge-muted {
   background: var(--surface-2);
   color: var(--muted);
+}
+
+/* ---------- スマホの縦向き(仕様書 §10.1) ---------- */
+@media (max-width: 760px) {
+  :root {
+    --page-safe-bottom: 0px;
+  }
 }

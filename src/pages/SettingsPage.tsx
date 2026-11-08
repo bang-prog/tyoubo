@@ -8,6 +8,7 @@ import { parseBackup, type BackupFile } from '../db/backup'
 import { db } from '../db/db'
 import { userMessage } from '../db/errors'
 import { getSetting, setTaxRate } from '../db/settings'
+import { PIN_UNSUPPORTED_MESSAGE, pinSupported } from '../lib/pin'
 import { formatBytes, getStorageStatus, requestPersistentStorage, type StorageStatus } from '../lib/storage'
 import { formatDateTime } from '../lib/time'
 import styles from './SettingsPage.module.css'
@@ -115,7 +116,8 @@ export default function SettingsPage() {
             これは他の人に画面を触られないための簡易なロックで、データの暗号化ではありません。
           </p>
           {pinNotice && <p className="notice">{pinNotice}</p>}
-          <div className={styles.buttons}>
+          {!pinSupported() && <p className="error">{PIN_UNSUPPORTED_MESSAGE}</p>}
+          <div className={styles.buttons} hidden={!pinSupported()}>
             {settings.pinEnabled ? (
               <>
                 <button type="button" className="btn" onClick={() => setPinAction('change')}>

@@ -10,11 +10,15 @@ type Props = {
   onDecrement: (item: CartItemView) => void
   onClear: () => void
   onPay: () => void
+  /** 消費税率(%)。読み込み中は undefined */
+  taxRate?: number
+  /** スマホで下から開いたカートを閉じる(PC・iPad では「閉じる」は出ない) */
+  onClose?: () => void
 }
 
-/** 会計画面の右側。カートの中身と合計、「お預かり金額を入力」ボタン。 */
-export default function CartPanel({ items, total, onIncrement, onDecrement, onClear, onPay }: Props) {
-  const { tax, excl } = splitTax(total)
+/** 会計画面の右側(スマホでは下から開く)。カートの中身と合計、「お預かり金額を入力」ボタン。 */
+export default function CartPanel({ items, total, onIncrement, onDecrement, onClear, onPay, taxRate, onClose }: Props) {
+  const { tax, excl } = splitTax(total, taxRate)
   const count = items.reduce((sum, i) => sum + i.qty, 0)
   const hasUnavailable = items.some((i) => !i.available)
 
@@ -22,15 +26,22 @@ export default function CartPanel({ items, total, onIncrement, onDecrement, onCl
     <aside className={styles.cart} aria-label="お会計">
       <div className={styles.head}>
         <h2 className={styles.title}>お会計</h2>
-        <button type="button" className="btn btn-sm" onClick={onClear} disabled={items.length === 0}>
-          すべて取り消す
-        </button>
+        <div className={styles.headButtons}>
+          <button type="button" className="btn btn-sm" onClick={onClear} disabled={items.length === 0}>
+            すべて取り消す
+          </button>
+          {onClose && (
+            <button type="button" className={`btn btn-sm ${styles.close}`} onClick={onClose}>
+              閉じる
+            </button>
+          )}
+        </div>
       </div>
 
       <ul className={styles.list}>
         {items.length === 0 ? (
           <li className={styles.empty}>
-            左の商品をタップすると
+            商品をタップすると
             <br />
             ここに追加されます
           </li>
@@ -77,7 +88,7 @@ export default function CartPanel({ items, total, onIncrement, onDecrement, onCl
           <span className="num">{formatYen(excl)}</span>
         </div>
         <div className={styles.row}>
-          <span>うち消費税(10%)</span>
+          <span>うち消費税({taxRate ?? '…'}%)</span>
           <span className="num">{formatYen(tax)}</span>
         </div>
         <div className={`${styles.row} ${styles.total}`}>

@@ -1,5 +1,6 @@
 // カテゴリーと商品の読み書き(仕様書 §5 F1)。
 
+import { newId } from '../lib/id'
 import { MAX_RECEIVED } from '../lib/money'
 import { nowIso } from '../lib/time'
 import type { AppDB } from './db'
@@ -21,7 +22,7 @@ export async function addCategory(db: AppDB, name: string): Promise<string> {
   return db.transaction('rw', db.categories, async () => {
     const all = await db.categories.toArray()
     if (all.some((c) => c.name === clean)) throw new ValidationError(`カテゴリー「${clean}」はすでにあります`)
-    const id = crypto.randomUUID()
+    const id = newId()
     const sortOrder = Math.max(0, ...all.map((c) => c.sortOrder)) + 1
     await db.categories.add({ id, name: clean, sortOrder, createdAt: nowIso() })
     return id
@@ -119,7 +120,7 @@ export async function saveProduct(db: AppDB, input: ProductInput, id?: string): 
     if (!(await db.categories.get(input.categoryId))) throw new ValidationError('カテゴリーを選んでください')
 
     const now = nowIso()
-    const productId = id ?? crypto.randomUUID()
+    const productId = id ?? newId()
     const fields = { name, categoryId: input.categoryId, priceIncl: input.priceIncl, cost: input.cost }
     if (id) {
       const existing = await db.products.get(id)
@@ -141,7 +142,7 @@ export async function saveProduct(db: AppDB, input: ProductInput, id?: string): 
         if (found) {
           await db.variants.update(found.id, { stock, sizeOrder, colorOrder, isActive: true })
         } else {
-          await db.variants.add({ id: crypto.randomUUID(), productId, size, color, stock, sizeOrder, colorOrder, isActive: true })
+          await db.variants.add({ id: newId(), productId, size, color, stock, sizeOrder, colorOrder, isActive: true })
         }
       }
     }

@@ -53,3 +53,14 @@
   padding: 0 12px;
   font-size: 13px;
 }
+
+/* スマホでは表を横にスクロールする。どこを見ているか分かるように、日付(月)の列は左に残す */
+@media (max-width: 760px) {
+  .table th:first-child,
+  .table td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--surface);
+  }
+}

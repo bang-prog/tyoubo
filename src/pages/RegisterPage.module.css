@@ -4,7 +4,7 @@
   padding-left: var(--gutter-left);
   padding-right: var(--gutter-right);
   padding-top: 16px;
-  padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  padding-bottom: max(16px, var(--page-safe-bottom));
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -75,5 +75,119 @@
   .backup {
     flex-direction: column;
     align-items: stretch;
+  }
+}
+
+/* PC・iPad では、カートの入れ物は右の列にそのまま入る */
+.cartArea {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.cartArea > * {
+  flex: 1;
+}
+
+/* スマホだけで使う部品 */
+.checkoutBar,
+.scrim {
+  display: none;
+}
+
+/*
+ * スマホの縦向き(仕様書 §10.1):商品の一覧を全面に出し、下に「合計 / 会計へ」のバーを固定する。
+ * 「会計へ」を押すと、カートを画面の下から開く。
+ */
+@media (max-width: 760px) {
+  .page {
+    overflow: hidden;
+    padding-bottom: 0;
+    gap: 10px;
+  }
+
+  .layout {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .backup {
+    flex-direction: row;
+    align-items: center;
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .cartArea {
+    display: none;
+  }
+
+  .cartArea[data-open='true'] {
+    display: flex;
+    position: fixed;
+    z-index: 60;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: max(56px, calc(env(safe-area-inset-top, 0px) + 40px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: var(--surface);
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25);
+  }
+
+  .cartArea[data-open='true'] > * {
+    border: 0;
+    border-radius: 18px 18px 0 0;
+  }
+
+  .scrim {
+    display: block;
+    position: fixed;
+    z-index: 55;
+    inset: 0;
+    background: var(--scrim);
+  }
+
+  .checkoutBar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: none;
+    margin: 0 calc(-1 * var(--gutter-right)) 0 calc(-1 * var(--gutter-left));
+    padding: 10px var(--gutter-right) 10px var(--gutter-left);
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+  }
+
+  .barTotal {
+    flex: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .barTotal span {
+    font-size: 26px;
+    font-weight: 700;
+  }
+
+  .barTotal small {
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .checkoutBar :global(.btn) {
+    min-height: 56px;
+    min-width: 132px;
+    font-size: 18px;
+  }
+
+  /* 下の「会計へ」のバーとタブバーの上に出す */
+  .toast {
+    bottom: calc(150px + env(safe-area-inset-bottom, 0px));
   }
 }

@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import CategoryPanel from '../components/products/CategoryPanel'
 import ProductForm from '../components/products/ProductForm'
 import ProductList from '../components/products/ProductList'
@@ -15,6 +15,7 @@ export default function ProductsPage() {
   const catalog = useLiveQuery(() => loadCatalog(db), [])
   const [selected, setSelected] = useState<Selection>(null)
   const [flash, setFlash] = useState<string | null>(null)
+  const pageRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     if (!flash) return
@@ -42,11 +43,14 @@ export default function ProductsPage() {
   function select(next: Selection) {
     setSelected(next)
     setFlash(null)
+    // スマホでは一覧と入力欄が入れ替わるので、いちばん上から見せる
+    pageRef.current?.scrollTo({ top: 0 })
   }
 
   return (
-    <section className={styles.page}>
-      <div className={styles.grid}>
+    <section ref={pageRef} className={styles.page}>
+      {/* スマホでは一覧と入力欄のどちらか一方だけを全面に出す(仕様書 §10.1) */}
+      <div className={styles.grid} data-view={showForm ? 'form' : 'list'}>
         <div className={styles.left}>
           <ProductList
             products={catalog.products}
@@ -59,6 +63,11 @@ export default function ProductsPage() {
         </div>
 
         <div className={styles.right}>
+          {showForm && (
+            <button type="button" className={`btn btn-sm ${styles.back}`} onClick={() => select(null)}>
+              ‹ 一覧に戻る
+            </button>
+          )}
           {showForm ? (
             <ProductForm
               // 別の商品を選んだら、入力欄を作り直して中身を入れ替える

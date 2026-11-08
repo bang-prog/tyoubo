@@ -34,6 +34,8 @@
   align-content: start;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  /* 行の高さは中身に合わせる(一覧がスクロールするとき、長い商品名のカードが縮んで重ならないように) */
+  grid-auto-rows: max-content;
   gap: 10px;
   padding-bottom: 8px;
 }
@@ -109,5 +111,29 @@
 @media (max-width: 480px) {
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* スマホでは商品の一覧が画面の残りをすべて使い、中だけをスクロールする */
+@media (max-width: 760px) {
+  .picker {
+    flex: 1;
+  }
+
+  .chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin: 0 calc(-1 * var(--gutter-right)) 0 calc(-1 * var(--gutter-left));
+    padding: 0 var(--gutter-right) 2px var(--gutter-left);
+    scrollbar-width: none;
+  }
+
+  .chip {
+    flex: none;
+  }
+
+  .card {
+    min-height: 116px;
+    padding: 12px;
   }
 }

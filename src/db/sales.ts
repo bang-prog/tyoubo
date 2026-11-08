@@ -1,5 +1,6 @@
 // 会計の保存(仕様書 §5 F2、§9)。
 
+import { newId } from '../lib/id'
 import { calcChange, cartTotal, lineTotal, MAX_RECEIVED, taxOf } from '../lib/money'
 import { businessDateOf, nowIso } from '../lib/time'
 import type { AppDB } from './db'
@@ -43,7 +44,7 @@ export async function createSale(
   }
 
   return db.transaction('rw', [db.variants, db.products, db.categories, db.sales, db.saleItems, db.settings], async () => {
-    const saleId = crypto.randomUUID()
+    const saleId = newId()
     const items: SaleItem[] = []
     const stockAfter: { id: string; stock: number }[] = []
 
@@ -55,7 +56,7 @@ export async function createSale(
       }
       const category = await db.categories.get(product.categoryId)
       items.push({
-        id: crypto.randomUUID(),
+        id: newId(),
         saleId,
         lineNo: items.length,
         variantId: variant.id,

@@ -42,12 +42,32 @@
   }
 }
 
-@media (max-width: 600px) {
+/* スマホでは差引売上を1行目に大きく、ほかの5つは3列に小さく並べる */
+@media (max-width: 760px) {
   .tiles {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
   }
 
   .main {
     grid-column: 1 / -1;
+  }
+
+  .tile {
+    padding: 8px 10px;
+    border-radius: 10px;
+  }
+
+  .label {
+    font-size: 11px;
+    letter-spacing: 0;
+  }
+
+  .value {
+    font-size: 16px;
+  }
+
+  .main .value {
+    font-size: 24px;
   }
 }

@@ -4,7 +4,7 @@
   padding-left: var(--gutter-left);
   padding-right: var(--gutter-right);
   padding-top: 16px;
-  padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  padding-bottom: max(16px, var(--page-safe-bottom));
 }
 
 .toolbar {
@@ -83,5 +83,50 @@
   .summary {
     margin-left: 0;
     width: 100%;
+  }
+}
+
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* 「一覧に戻る」はスマホだけ */
+.back {
+  display: none;
+}
+
+/* スマホでは一覧と明細のどちらか一方だけを全面に出す(仕様書 §10.1) */
+@media (max-width: 760px) {
+  .body[data-view='detail'] > :first-child,
+  .body[data-view='list'] .detail {
+    display: none;
+  }
+
+  .back {
+    display: inline-flex;
+    align-self: flex-start;
+  }
+
+  .toolbar {
+    gap: 6px;
+  }
+
+  .navButton {
+    width: 44px;
+    height: 44px;
+  }
+
+  .date {
+    flex: 1;
+    min-width: 0;
+    font-size: clamp(14px, 4vw, 17px);
+    white-space: nowrap;
+  }
+
+  .summary {
+    gap: 14px;
   }
 }

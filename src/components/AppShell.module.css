@@ -1,16 +1,24 @@
+/*
+ * PC・iPad:1行目に「アプリ名・タブ・時計」、その下に画面。
+ * スマホ(幅 760px 以下):1行目に「アプリ名・時計」、真ん中に画面、一番下にタブ。
+ * 並べ替えは grid-template-areas で行い、HTML の順番は変えない。
+ */
 .app {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    'brand tabs clock'
+    'main  main main';
   height: 100%;
 }
 
-.bar {
+/* 1行目の3つの部品に、同じ背景と下の線を付けてヘッダーに見せる */
+.brand,
+.tabs,
+.clock {
   display: flex;
   align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-  padding-left: var(--gutter-left);
-  padding-right: var(--gutter-right);
   padding-top: max(8px, env(safe-area-inset-top, 0px));
   padding-bottom: 8px;
   background: var(--surface);
@@ -18,15 +26,18 @@
 }
 
 .brand {
+  grid-area: brand;
+  margin: 0;
+  padding-left: var(--gutter-left);
+  padding-right: 16px;
   font-size: 18px;
   letter-spacing: 0.04em;
   white-space: nowrap;
 }
 
 .tabs {
-  display: flex;
+  grid-area: tabs;
   gap: 4px;
-  flex: 1;
   min-width: 0;
   overflow-x: auto;
 }
@@ -43,6 +54,11 @@
   white-space: nowrap;
 }
 
+/* 横長の画面ではアイコンを出さない */
+.icon {
+  display: none;
+}
+
 .tab:active {
   background: var(--surface-2);
 }
@@ -53,18 +69,88 @@
 }
 
 .clock {
+  grid-area: clock;
+  padding-left: 16px;
+  padding-right: var(--gutter-right);
   color: var(--muted);
   font-size: 14px;
   white-space: nowrap;
 }
 
 .main {
-  flex: 1;
+  grid-area: main;
   min-height: 0;
+  min-width: 0;
 }
 
+/* ---------- スマホの縦向き ---------- */
 @media (max-width: 760px) {
+  .app {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'brand clock'
+      'main  main'
+      'tabs  tabs';
+  }
+
+  .brand,
   .clock {
-    display: none;
+    padding-bottom: 6px;
+    padding-top: max(6px, env(safe-area-inset-top, 0px));
+    min-height: 44px;
+  }
+
+  .brand {
+    font-size: 17px;
+  }
+
+  .clock {
+    justify-content: flex-end;
+    font-size: 13px;
+  }
+
+  /* 画面下に固定したタブバー。ホームバーと重ならないように下に余白をとる */
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0;
+    overflow: visible;
+    padding: 4px max(4px, env(safe-area-inset-right, 0px)) max(4px, env(safe-area-inset-bottom, 0px))
+      max(4px, env(safe-area-inset-left, 0px));
+    border-bottom: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .tab {
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    min-height: 54px;
+    padding: 4px 0;
+    font-size: 11px;
+    letter-spacing: -0.02em;
+  }
+
+  .icon {
+    display: block;
+    line-height: 0;
+  }
+
+  .active {
+    background: none;
+  }
+
+  .active .icon {
+    padding: 2px 14px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+  }
+}
+
+/* とても狭い画面(幅 340px 未満)では時計の日付を省く余裕がないので、時計を出さない */
+@media (max-width: 339px) {
+  .clock {
+    visibility: hidden;
   }
 }

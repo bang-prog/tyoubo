@@ -83,3 +83,31 @@
   font-weight: 700;
   text-align: left;
 }
+
+/* スマホではカテゴリーと仕入価格の列を省く。カテゴリーは商品名の下に出す(仕様書 §10.1) */
+.narrow {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .table .wide {
+    display: none;
+  }
+
+  .table .narrow {
+    display: block;
+    margin: 0 0 8px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* 商品名が長いときは折り返す */
+  .table td:first-child {
+    white-space: normal;
+  }
+
+  .nameButton {
+    min-height: 0;
+    padding-top: 8px;
+  }
+}

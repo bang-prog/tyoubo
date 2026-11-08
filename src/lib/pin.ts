@@ -1,6 +1,18 @@
 // 暗証番号(PIN)と復旧コードのハッシュ化(仕様書 §5 F6)。
 // これは他の人に画面を触られないための簡易なロックで、データの暗号化ではない。
 
+/**
+ * この開き方で暗証番号を使えるか。ハッシュ化に使う crypto.subtle は https か localhost でしか使えない。
+ * 公開した URL(https)では使える。開発中に iPhone から IP アドレス(http)で開いたときは使えない。
+ */
+export function pinSupported(): boolean {
+  return Boolean(globalThis.crypto?.subtle)
+}
+
+/** https で開いてもらうための案内 */
+export const PIN_UNSUPPORTED_MESSAGE =
+  'この開き方(http)では暗証番号を使えません。公開した https の URL か、PC の localhost で開いてください。'
+
 /** PIN は4〜6桁の数字 */
 export const PIN_PATTERN = /^\d{4,6}$/
 

@@ -11,8 +11,10 @@ import { loadCatalog, type ProductView } from '../db/catalog'
 import { db } from '../db/db'
 import { userMessage } from '../db/errors'
 import { createSale } from '../db/sales'
+import { getSetting } from '../db/settings'
 import type { Variant } from '../db/types'
 import { buildCartView, cartViewTotal } from '../lib/cart'
+import { formatYen } from '../lib/money'
 import { sizeLabel } from '../lib/labels'
 import { useCart } from '../state/CartContext'
 import styles from './RegisterPage.module.css'
@@ -26,6 +28,9 @@ export default function RegisterPage() {
   // 最後のバックアップから7日以上たったら、上に注意を出す(仕様書 §5 F2)
   const backupDue = useLiveQuery(() => loadBackupDue(db), [])
   const backup = useBackupDownload()
+  const taxRate = useLiveQuery(() => getSetting(db, 'taxRate'), [])
+  /** スマホでカートを下から開いているか(仕様書 §10.1) */
+  const [cartOpen, setCartOpen] = useState(false)
   const { lines, dispatch } = useCart()
   const [pickingId, setPickingId] = useState<string | null>(null)
   const [paying, setPaying] = useState(false)
@@ -50,6 +55,7 @@ export default function RegisterPage() {
 
   const items = buildCartView(lines, catalog.products)
   const total = cartViewTotal(items)
+  const count = items.reduce((sum, i) => sum + i.qty, 0)
   const picking = pickingId ? catalog.products.find((p) => p.id === pickingId) : undefined
 
   /** カートに1点入れる。在庫を超えるときは警告するが、入れることはできる */
@@ -81,6 +87,7 @@ export default function RegisterPage() {
       const sale = await createSale(db, { lines, received, expectedTotal: total })
       dispatch({ type: 'clear' })
       setPaying(false)
+      setCartOpen(false)
       setDone({ saleNo: sale.saleNo, total: sale.totalIncl, received: sale.received, change: sale.change })
     } catch (e) {
       // 保存できなかったときはカートを消さず、電卓の画面にエラーを出す
@@ -106,17 +113,34 @@ export default function RegisterPage() {
       )}
       <div className={styles.layout}>
         <ProductPicker categories={catalog.categories} products={catalog.products} onPick={pick} />
-        <CartPanel
-          items={items}
-          total={total}
-          onIncrement={(item) => addOne(item.variantId, item.productName, item.stock)}
-          onDecrement={(item) => dispatch({ type: 'decrement', variantId: item.variantId })}
-          onClear={() => dispatch({ type: 'clear' })}
-          onPay={() => {
-            setPayError(null)
-            setPaying(true)
-          }}
-        />
+        {/* PC・iPad では右側に常に表示。スマホでは「会計へ」を押したときだけ下から開く */}
+        <div className={styles.cartArea} data-open={cartOpen}>
+          <CartPanel
+            items={items}
+            total={total}
+            taxRate={taxRate}
+            onIncrement={(item) => addOne(item.variantId, item.productName, item.stock)}
+            onDecrement={(item) => dispatch({ type: 'decrement', variantId: item.variantId })}
+            onClear={() => dispatch({ type: 'clear' })}
+            onPay={() => {
+              setPayError(null)
+              setPaying(true)
+            }}
+            onClose={() => setCartOpen(false)}
+          />
+        </div>
+      </div>
+      {cartOpen && <div className={styles.scrim} onClick={() => setCartOpen(false)} aria-hidden="true" />}
+
+      {/* スマホだけ:画面の下に合計と「会計へ」を固定する */}
+      <div className={styles.checkoutBar}>
+        <div className={styles.barTotal}>
+          <span className="num">{formatYen(total)}</span>
+          <small className="num">{count}点</small>
+        </div>
+        <button type="button" className="btn btn-primary" onClick={() => setCartOpen(true)} disabled={items.length === 0}>
+          会計へ
+        </button>
       </div>
 
       {picking && (
@@ -142,7 +166,8 @@ export default function RegisterPage() {
 
       {done && <ChangeDialog {...done} onNext={() => setDone(null)} />}
 
-      {toast && (
+      {/* スマホでカートを開いているときは、追加のお知らせは出さない(合計の上に重なるため)。在庫の警告は出す */}
+      {toast && (toast.warn || !cartOpen) && (
         <div className={toast.warn ? `${styles.toast} ${styles.warn}` : styles.toast} role="status">
           {toast.text}
         </div>

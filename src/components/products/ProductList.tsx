@@ -63,9 +63,9 @@ export default function ProductList({ products, categories, selectedId, onSelect
             <thead>
               <tr>
                 <th>商品名</th>
-                <th>カテゴリー</th>
+                <th className={styles.wide}>カテゴリー</th>
                 <th className={styles.r}>税込価格</th>
-                <th className={styles.r}>仕入価格</th>
+                <th className={`${styles.r} ${styles.wide}`}>仕入価格</th>
                 <th className={styles.r}>在庫</th>
               </tr>
             </thead>
@@ -77,10 +77,12 @@ export default function ProductList({ products, categories, selectedId, onSelect
                     <button type="button" className={styles.nameButton} onClick={() => onSelect(p.id)}>
                       {p.name}
                     </button>
+                    {/* スマホではカテゴリーの列を省き、商品名の下に出す */}
+                    <small className={styles.narrow}>{p.categoryName}</small>
                   </td>
-                  <td>{p.categoryName}</td>
+                  <td className={styles.wide}>{p.categoryName}</td>
                   <td className={`num ${styles.r}`}>{formatYen(p.priceIncl)}</td>
-                  <td className={`num ${styles.r}`}>{formatYen(p.cost)}</td>
+                  <td className={`num ${styles.r} ${styles.wide}`}>{formatYen(p.cost)}</td>
                   <td className={`num ${styles.r}`}>
                     {p.hasNegative ? (
                       <span className="badge badge-bad">{p.totalStock}(マイナスあり)</span>

@@ -187,3 +187,18 @@
   gap: 10px;
   flex-wrap: wrap;
 }
+
+/* スマホでは単価と数量の列を省き、商品名の下に「¥1,980 × 1」とまとめる(仕様書 §10.1) */
+.narrow {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .items .wide {
+    display: none;
+  }
+
+  .items .narrow {
+    display: block;
+  }
+}

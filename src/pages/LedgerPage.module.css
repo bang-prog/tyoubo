@@ -4,7 +4,7 @@
   padding-left: var(--gutter-left);
   padding-right: var(--gutter-right);
   padding-top: 16px;
-  padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  padding-bottom: max(16px, var(--page-safe-bottom));
   display: flex;
   flex-direction: column;
   gap: 16px;

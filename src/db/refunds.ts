@@ -1,5 +1,6 @@
 // 返品の保存(仕様書 §5 F3、§9)。
 
+import { newId } from '../lib/id'
 import { taxOf } from '../lib/money'
 import { businessDateOf, nowIso } from '../lib/time'
 import type { AppDB } from './db'
@@ -39,7 +40,7 @@ export async function createRefund(
       const sale = await db.sales.get(input.saleId)
       if (!sale) throw new ValidationError('この会計は見つかりません')
 
-      const refundId = crypto.randomUUID()
+      const refundId = newId()
       const items: RefundItem[] = []
       const updates: { saleItemId: string; returnedQty: number; variantId: string; qty: number }[] = []
 
@@ -51,7 +52,7 @@ export async function createRefund(
           throw new ValidationError(`「${saleItem.productName}」は、あと${remaining}点までしか返品できません`)
         }
         items.push({
-          id: crypto.randomUUID(),
+          id: newId(),
           refundId,
           saleItemId: saleItem.id,
           qty: line.qty,

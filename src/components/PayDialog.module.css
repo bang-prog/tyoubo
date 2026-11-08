@@ -168,32 +168,89 @@
   color: var(--accent-fg);
 }
 
+/*
+ * スマホの縦向き(仕様書 §10.1):縦1列で、お会計・お預かり・お釣りを上、キーを下にする。
+ * スクロールせずに1画面に収まるように、高さは画面の高さ(dvh)に合わせて縮める。
+ */
 @media (max-width: 760px) {
   .layout {
     grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
   }
 
-  .key {
-    min-height: 64px;
-    font-size: 28px;
+  .display {
+    gap: 6px;
+  }
+
+  .title {
+    font-size: 15px;
+  }
+
+  .row {
+    padding: 6px 14px;
+    border-radius: 12px;
+  }
+
+  .label {
+    font-size: 14px;
+  }
+
+  .label small {
+    font-size: 11px;
+  }
+
+  .amount {
+    font-size: 24px;
+  }
+
+  .big {
+    font-size: clamp(30px, 5.2dvh, 44px);
+  }
+
+  .received {
+    border-width: 2px;
+  }
+
+  .note {
+    display: none;
+  }
+
+  .pad {
+    gap: 8px;
+  }
+
+  .quick {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
   }
 
   .quickKey {
-    min-height: 52px;
-    font-size: 15px;
+    min-height: clamp(40px, 5.6dvh, 52px);
+    padding: 0;
+    font-size: clamp(12px, 3.6vw, 14px);
+    white-space: nowrap;
   }
-}
 
-@media (max-width: 480px) {
-  .quick {
-    grid-template-columns: repeat(2, 1fr);
+  .keys {
+    gap: 6px;
+  }
+
+  .key {
+    min-height: clamp(46px, 7.4dvh, 64px);
+    font-size: 26px;
   }
 
   .footer {
-    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .footerButton {
+    min-height: clamp(50px, 7dvh, 60px);
+    padding: 0 14px;
+    font-size: 16px;
   }
 
   .confirm {
-    flex-basis: 100%;
+    font-size: 18px;
   }
 }

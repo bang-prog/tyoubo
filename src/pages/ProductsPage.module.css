@@ -4,7 +4,7 @@
   padding-left: var(--gutter-left);
   padding-right: var(--gutter-right);
   padding-top: 16px;
-  padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  padding-bottom: max(16px, var(--page-safe-bottom));
 }
 
 /* 左に一覧とカテゴリー、右に入力欄。狭い画面では縦に並べる */
@@ -40,5 +40,22 @@
 
   .right {
     position: static;
+  }
+}
+
+/* 「一覧に戻る」はスマホだけ */
+.back {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .grid[data-view='form'] .left,
+  .grid[data-view='list'] .right {
+    display: none;
+  }
+
+  .back {
+    display: inline-flex;
+    margin-bottom: 12px;
   }
 }
