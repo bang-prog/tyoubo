@@ -246,3 +246,13 @@ a {
   background: var(--bad-soft);
   color: var(--bad);
 }
+
+.badge-good {
+  background: var(--good-soft);
+  color: var(--good);
+}
+
+.badge-muted {
+  background: var(--surface-2);
+  color: var(--muted);
+}

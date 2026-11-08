@@ -1,5 +1,5 @@
 /** ファイルを端末に保存する。iPhone や iPad では、保存先を選ぶ画面が出る。 */
-export function downloadFile(data: ArrayBuffer, fileName: string, mimeType: string): void {
+export function downloadFile(data: BlobPart, fileName: string, mimeType: string): void {
   const url = URL.createObjectURL(new Blob([data], { type: mimeType }))
   const link = document.createElement('a')
   link.href = url
@@ -12,3 +12,4 @@ export function downloadFile(data: ArrayBuffer, fileName: string, mimeType: stri
 }
 
 export const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+export const JSON_MIME = 'application/json'

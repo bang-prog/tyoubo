@@ -5,6 +5,7 @@ import SaleDetailPanel from '../components/history/SaleDetailPanel'
 import SaleList from '../components/history/SaleList'
 import { db } from '../db/db'
 import { loadDayHistory } from '../db/history'
+import { getSetting } from '../db/settings'
 import { formatYen } from '../lib/money'
 import { addDays, businessDateOf, formatBusinessDate, isBusinessDate } from '../lib/time'
 import styles from './HistoryPage.module.css'
@@ -17,6 +18,7 @@ export default function HistoryPage() {
   const date = isBusinessDate(param) ? param : today
 
   const day = useLiveQuery(() => loadDayHistory(db, date), [date])
+  const purgedMonths = useLiveQuery(() => getSetting(db, 'purgedMonths'), []) ?? []
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
   function goTo(next: string) {
@@ -71,7 +73,9 @@ export default function HistoryPage() {
       {!day || day.businessDate !== date ? (
         <p className="hint">読み込み中…</p>
       ) : day.sales.length === 0 ? (
-        <p className={styles.empty}>この日の会計はありません。</p>
+        <p className={styles.empty}>
+          {purgedMonths.includes(date.slice(0, 7)) ? 'この月のデータは削除済みです。' : 'この日の会計はありません。'}
+        </p>
       ) : (
         <div className={styles.body}>
           <SaleList sales={day.sales} selectedId={selected?.id ?? null} onSelect={setSelectedId} />

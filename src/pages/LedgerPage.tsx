@@ -4,21 +4,16 @@ import { useSearchParams } from 'react-router'
 import CategoryTable from '../components/ledger/CategoryTable'
 import LedgerSummary from '../components/ledger/LedgerSummary'
 import LedgerTable from '../components/ledger/LedgerTable'
+import PurgeDialog from '../components/ledger/PurgeDialog'
 import { db } from '../db/db'
 import { userMessage } from '../db/errors'
 import { loadLedger, type LedgerMode } from '../db/ledger'
-import { markExported } from '../db/settings'
+import { shiftMonth } from '../db/purge'
+import { getSetting, markExported } from '../db/settings'
 import { downloadFile, XLSX_MIME } from '../lib/download'
 import { buildLedgerWorkbook, exportedMonthsOf, ledgerFileName } from '../lib/ledgerExcel'
 import { businessDateOf } from '../lib/time'
 import styles from './LedgerPage.module.css'
-
-/** 'YYYY-MM' を months か月ずらす */
-function shiftMonth(month: string, months: number): string {
-  const [y, m] = month.split('-').map(Number)
-  const d = new Date(y, m - 1 + months, 1)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-}
 
 /**
  * 帳簿(仕様書 §5 F5)。日別(月を選ぶ)と月別(年を選ぶ)を切り替える。
@@ -38,6 +33,9 @@ export default function LedgerPage() {
   const period = mode === 'day' ? month : year
 
   const data = useLiveQuery(() => loadLedger(db, mode, period, today), [mode, period, today])
+  /** 古いデータを削除した月(仕様書 §5 F8)。集計の代わりに「削除済み」と出す */
+  const purgedMonths = useLiveQuery(() => getSetting(db, 'purgedMonths'), []) ?? []
+  const [purging, setPurging] = useState(false)
   /** 出力している期間('YYYY-MM' / 'YYYY' / 'YYYY-MM-DD')。出力中は次の出力を押せなくする */
   const [exporting, setExporting] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
@@ -124,6 +122,8 @@ export default function LedgerPage() {
 
       {!data || data.period !== period || data.mode !== mode ? (
         <p className="hint">読み込み中…</p>
+      ) : mode === 'day' && purgedMonths.includes(month) ? (
+        <p className={styles.purged}>この月のデータは削除済みです。出力した Excel の帳簿をご覧ください。</p>
       ) : (
         <>
           <LedgerSummary total={data.total} />
@@ -137,6 +137,7 @@ export default function LedgerPage() {
                 // 日別の行は1日分、月別の行は1か月分(日別表示の「この月の Excel」と同じ中身)を出力する
                 onDownloadRow={(key) => void exportLedger(mode === 'day' ? 'date' : 'day', key)}
                 downloadingKey={exporting}
+                purgedMonths={purgedMonths}
               />
               <p className="hint">
                 {mode === 'day'
@@ -150,6 +151,25 @@ export default function LedgerPage() {
             </div>
           </div>
         </>
+      )}
+
+      <div className={styles.footer}>
+        <button type="button" className="btn btn-sm" onClick={() => setPurging(true)}>
+          古いデータの削除
+        </button>
+        <span className="hint">3か月より前で、Excel を出力済みの月のデータを端末から削除できます。</span>
+      </div>
+
+      {purging && (
+        <PurgeDialog
+          today={today}
+          onClose={() => setPurging(false)}
+          onDone={(message) => {
+            setPurging(false)
+            setError(null)
+            setNotice(message)
+          }}
+        />
       )}
     </section>
   )

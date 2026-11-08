@@ -20,10 +20,12 @@ type Props = {
   onDownloadRow?: (key: string) => void
   /** 出力している行のキー(出力中はボタンを押せなくする) */
   downloadingKey?: string | null
+  /** 古いデータを削除した月('YYYY-MM')。その月の行は「削除済み」とする */
+  purgedMonths?: string[]
 }
 
-/** 日別・月別の売上の表。会計も返品もない日(月)は「会計なし」とする。 */
-export default function LedgerTable({ mode, rows, total, onDownloadRow, downloadingKey }: Props) {
+/** 日別・月別の売上の表。会計も返品もない日(月)は「会計なし」、データを削除した月は「削除済み」とする。 */
+export default function LedgerTable({ mode, rows, total, onDownloadRow, downloadingKey, purgedMonths = [] }: Props) {
   if (rows.length === 0) return <p className="hint">この期間のデータはありません。</p>
   const withDownload = Boolean(onDownloadRow)
   const columns = withDownload ? 8 : 7
@@ -48,7 +50,7 @@ export default function LedgerTable({ mode, rows, total, onDownloadRow, download
             r.count === 0 && r.refundIncl === 0 ? (
               <tr key={r.key} className={styles.empty}>
                 <td>{rowLabel(mode, r.key)}</td>
-                <td colSpan={columns - 1}>会計なし</td>
+                <td colSpan={columns - 1}>{purgedMonths.includes(r.key.slice(0, 7)) ? '削除済み' : '会計なし'}</td>
               </tr>
             ) : (
               <tr key={r.key}>

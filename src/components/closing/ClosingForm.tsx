@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { saveClosing, type ClosingDay } from '../../db/closings'
 import { db } from '../../db/db'
 import { userMessage } from '../../db/errors'
@@ -12,6 +12,8 @@ type Props = {
   day: ClosingDay
   notice: string | null
   onSaved: () => void
+  /** 保存ボタンの下に出すもの(保存したあとのバックアップの案内) */
+  afterSave?: ReactNode
 }
 
 const STATUS_LABEL = { even: '過不足なし', over: '現金が多い(過剰)', short: '現金が足りない(不足)' } as const
@@ -19,7 +21,7 @@ const STATUS_LABEL = { even: '過不足なし', over: '現金が多い(過剰)',
 const toInt = (text: string) => (text === '' ? 0 : Number(text))
 
 /** レジ締めの入力欄と、過不足の表示。 */
-export default function ClosingForm({ day, notice, onSaved }: Props) {
+export default function ClosingForm({ day, notice, onSaved, afterSave }: Props) {
   const saved = day.saved
   // 入力中の値は文字列で持つ(空欄を0と区別するため)
   const [floatText, setFloatText] = useState(String(saved?.openingFloat ?? day.defaultFloat))
@@ -179,6 +181,7 @@ export default function ClosingForm({ day, notice, onSaved }: Props) {
               : ''}
           </p>
         )}
+        {afterSave}
       </div>
     </div>
   )

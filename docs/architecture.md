@@ -31,7 +31,7 @@ flowchart LR
 | 画面 | React + TypeScript(Vite でビルド) | 実装中 |
 | データの保存 | IndexedDB(Dexie.js で操作) | 実装中 |
 | 画面のファイルの配信 | Cloudflare Pages | 予定 |
-| Excel の出力 | ExcelJS | 予定 |
+| Excel の出力 | ExcelJS | 実装中 |
 
 ---
 
@@ -45,7 +45,8 @@ flowchart TB
     shell["AppShell<br/>タブ・時計"]
     reg["会計<br/>RegisterPage"]
     prod["商品管理<br/>ProductsPage"]
-    rest["会計履歴・レジ締め・帳簿<br/>設定(今は枠だけ)"]
+    rest["会計履歴・レジ締め・帳簿<br/>設定"]
+    gate["PinGate<br/>暗証番号の入力画面"]
   end
 
   subgraph state["画面をまたいで持つ状態  src/state"]
@@ -56,6 +57,7 @@ flowchart TB
     catalog["catalog.ts<br/>カテゴリー・商品・在庫"]
     sales["sales.ts<br/>会計の保存"]
     settings["settings.ts<br/>設定"]
+    keep["pin.ts・backup.ts・purge.ts<br/>暗証番号・バックアップ・古いデータの削除"]
     schema["db.ts<br/>テーブルの定義"]
   end
 
@@ -77,6 +79,9 @@ flowchart TB
   catalog --> schema
   sales --> schema
   settings --> schema
+  rest -- "設定・削除" --> keep
+  gate -- "PIN の確認" --> keep
+  keep --> schema
   sales --> money
   sales --> time
   schema --> idb
@@ -84,11 +89,11 @@ flowchart TB
 
 | フォルダ | 役割 | 主なファイル |
 |---|---|---|
-| `src/pages` | タブごとの画面 | `RegisterPage`、`ProductsPage` |
-| `src/components` | 画面の部品 | `AppShell`、`Modal`、`PayDialog`(電卓)、`ChangeDialog`(完了)、`register/*`、`products/*` |
+| `src/pages` | タブごとの画面 | `RegisterPage`、`ProductsPage`、`HistoryPage`、`ClosingPage`、`LedgerPage`、`SettingsPage` |
+| `src/components` | 画面の部品 | `AppShell`、`Modal`、`PayDialog`(電卓)、`ChangeDialog`(完了)、`register/*`、`products/*`、`pin/*`(暗証番号)、`settings/*` |
 | `src/state` | タブを切り替えても残す状態 | `CartProvider`(カート) |
-| `src/db` | データの保存・読み込み。入力のチェックとトランザクションもここ | `db.ts`、`catalog.ts`、`sales.ts`、`settings.ts`、`errors.ts` |
-| `src/lib` | 計算だけの関数 | `money.ts`、`cashInput.ts`、`cart.ts`、`time.ts`、`labels.ts` |
+| `src/db` | データの保存・読み込み。入力のチェックとトランザクションもここ | `db.ts`、`catalog.ts`、`sales.ts`、`settings.ts`、`pin.ts`、`backup.ts`、`purge.ts`、`errors.ts` |
+| `src/lib` | 計算だけの関数 | `money.ts`、`cashInput.ts`、`cart.ts`、`time.ts`、`labels.ts`、`pin.ts`(ハッシュ化)、`storage.ts`(保存状態) |
 | `src/styles` | 色・文字・共通の部品の見た目 | `global.css` |
 
 **決まりごと**
@@ -230,6 +235,6 @@ sequenceDiagram
 | 9 | 返品 | `src/db/refunds.ts`、`SaleDetailPanel.tsx` | ✅ |
 | 10 | レジ締め | `src/db/closings.ts`、`src/lib/closing.ts`、`src/components/closing/*` | ✅ |
 | 11 | 帳簿と Excel 出力 | `src/db/ledger.ts`、`src/lib/ledgerExcel.ts`、`src/components/ledger/*` | ✅ |
-| 12 | 設定(暗証番号、バックアップ、古いデータの削除) | | ⬜ |
+| 12 | 設定(暗証番号、バックアップ、古いデータの削除) | `src/db/pin.ts`、`src/db/backup.ts`、`src/db/purge.ts`、`src/components/pin/*`、`src/components/settings/*`、`PurgeDialog.tsx` | ✅ |
 | 13 | スマホ対応(仕様書 §10.1) | | ⬜ |
 | 14 | PWA と実機での確認 | | ⬜ |

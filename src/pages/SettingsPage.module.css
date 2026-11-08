@@ -1,0 +1,86 @@
+.page {
+  height: 100%;
+  overflow: auto;
+  padding-left: var(--gutter-left);
+  padding-right: var(--gutter-right);
+  padding-top: 16px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+}
+
+.title {
+  font-size: 19px;
+  margin-bottom: 16px;
+}
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 720px;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.heading {
+  font-size: 17px;
+}
+
+.subheading {
+  margin: 8px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  font-size: 15px;
+}
+
+.buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.facts {
+  margin: 0;
+}
+
+.facts div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 0;
+  flex-wrap: wrap;
+}
+
+.facts div + div {
+  border-top: 1px solid var(--line);
+}
+
+.facts dt {
+  color: var(--muted);
+}
+
+.facts dd {
+  margin: 0;
+  font-weight: 700;
+  text-align: right;
+}
+
+.taxForm {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.taxInput {
+  width: 6em;
+  text-align: right;
+}
+
+.page a {
+  color: var(--accent);
+  font-weight: 700;
+}

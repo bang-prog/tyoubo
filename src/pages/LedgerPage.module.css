@@ -92,3 +92,21 @@
     width: 100%;
   }
 }
+
+.purged {
+  margin: 0;
+  padding: 40px 16px;
+  border-radius: 14px;
+  border: 1px dashed var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  text-align: center;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 8px;
+}

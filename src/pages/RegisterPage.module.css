@@ -5,6 +5,30 @@
   padding-right: var(--gutter-right);
   padding-top: 16px;
   padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* バックアップの注意(7日以上保存していないとき) */
+.backup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-size: 14px;
+}
+
+.backup p {
+  margin: 0;
+  flex: 1;
+}
+
+.backup :global(.btn) {
+  flex: none;
 }
 
 /* 左に商品、右にカート。どちらも中だけをスクロールさせ、合計と会計ボタンは常に見えるようにする */
@@ -12,7 +36,8 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) 380px;
   gap: 16px;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
 }
 
 .toast {
@@ -44,6 +69,11 @@
   .layout {
     display: flex;
     flex-direction: column;
-    height: auto;
+    flex: none;
+  }
+
+  .backup {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

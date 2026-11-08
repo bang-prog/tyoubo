@@ -49,3 +49,8 @@ export function nowIso(date = new Date()): string {
     `${sign}${pad2(Math.floor(abs / 60))}:${pad2(abs % 60)}`
   )
 }
+
+/** nowIso() で作った日時を表示用にする。'2026-11-08T21:05:09+09:00' → '2026年11月8日(日) 21:05' */
+export function formatDateTime(iso: string): string {
+  return `${formatBusinessDate(iso.slice(0, 10))} ${timeOf(iso)}`
+}

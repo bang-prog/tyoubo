@@ -1,0 +1,62 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.body p {
+  margin: 0;
+}
+
+.title {
+  font-size: 19px;
+}
+
+.lead {
+  text-align: center;
+  font-weight: 700;
+}
+
+.code {
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  text-align: center;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  user-select: all;
+  -webkit-user-select: all;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.codeInput {
+  text-align: center;
+  font-size: 20px;
+  letter-spacing: 0.08em;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.actions > :global(.btn) {
+  margin-left: auto;
+}
+
+.link {
+  min-height: 44px;
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: underline;
+}

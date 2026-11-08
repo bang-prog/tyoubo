@@ -1,6 +1,7 @@
 // 設定(settings テーブル)。1つの設定を「キーと値」の1行で保存する。
 
 import type { AppDB } from './db'
+import { ValidationError } from './errors'
 
 export type Settings = {
   /** 消費税率(%) */
@@ -52,4 +53,12 @@ export async function markExported(db: AppDB, months: string[]): Promise<void> {
     const current = await getSetting(db, 'exportedMonths')
     await setSetting(db, 'exportedMonths', [...new Set([...current, ...months])].sort())
   })
+}
+
+/** 税率(%)を変える。0〜30 の整数だけ受け付ける */
+export async function setTaxRate(db: AppDB, rate: number): Promise<void> {
+  if (!Number.isInteger(rate) || rate < 0 || rate > 30) {
+    throw new ValidationError('税率は 0〜30 の整数で入力してください。')
+  }
+  await setSetting(db, 'taxRate', rate)
 }

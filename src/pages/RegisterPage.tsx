@@ -5,6 +5,8 @@ import PayDialog from '../components/PayDialog'
 import CartPanel from '../components/register/CartPanel'
 import ProductPicker from '../components/register/ProductPicker'
 import VariantDialog from '../components/register/VariantDialog'
+import { useBackupDownload } from '../components/useBackupDownload'
+import { loadBackupDue } from '../db/backup'
 import { loadCatalog, type ProductView } from '../db/catalog'
 import { db } from '../db/db'
 import { userMessage } from '../db/errors'
@@ -21,6 +23,9 @@ type Toast = { text: string; warn: boolean }
 /** 会計画面(仕様書 §5 F2)。商品を選んでカートに入れ、お預かりを入力して会計を確定する。 */
 export default function RegisterPage() {
   const catalog = useLiveQuery(() => loadCatalog(db), [])
+  // 最後のバックアップから7日以上たったら、上に注意を出す(仕様書 §5 F2)
+  const backupDue = useLiveQuery(() => loadBackupDue(db), [])
+  const backup = useBackupDownload()
   const { lines, dispatch } = useCart()
   const [pickingId, setPickingId] = useState<string | null>(null)
   const [paying, setPaying] = useState(false)
@@ -87,6 +92,18 @@ export default function RegisterPage() {
 
   return (
     <section className={styles.page}>
+      {backupDue && (
+        <div className={styles.backup} role="status">
+          <p>
+            <strong>バックアップを保存してください。</strong>
+            {backupDue === 'never' ? 'まだ一度も保存していません。' : '最後の保存から7日以上たっています。'}
+          </p>
+          {backup.error && <p className="error">{backup.error}</p>}
+          <button type="button" className="btn btn-sm" onClick={() => void backup.run()} disabled={backup.busy}>
+            {backup.busy ? '保存しています…' : 'バックアップを保存'}
+          </button>
+        </div>
+      )}
       <div className={styles.layout}>
         <ProductPicker categories={catalog.categories} products={catalog.products} onPick={pick} />
         <CartPanel

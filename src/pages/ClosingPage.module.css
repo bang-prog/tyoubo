@@ -11,3 +11,17 @@
   font-size: 19px;
   margin-bottom: 16px;
 }
+
+/* レジ締めを保存したあとのバックアップの案内(保存ボタンの下に出す) */
+.backup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--accent-soft);
+}
+
+.backupTitle {
+  font-size: 16px;
+}
