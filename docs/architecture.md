@@ -1,6 +1,6 @@
 # レジ帳簿 アーキテクチャ
 
-- 更新:2026-11-08(ステップ⑬まで実装済み)
+- 更新:2026-11-09(ステップ⑭の PWA まで実装済み。実機での確認はこれから)
 - 仕様:[spec.md](spec.md)
 
 図は Mermaid で書いています。GitHub ではそのまま図として表示されます。
@@ -14,15 +14,17 @@
 ```mermaid
 flowchart LR
   dev["開発用の PC<br/>コードを書く"] -- "git push" --> gh["GitHub<br/>bang-prog/tyoubo"]
-  gh -- "自動デプロイ(予定)" --> cf["Cloudflare Pages<br/>画面のファイルを配る"]
+  gh -- "main にプッシュすると自動デプロイ" --> cf["Cloudflare Pages<br/>https://tyoubo.pages.dev/<br/>画面のファイルを配る"]
 
   subgraph device["お店の端末(iPhone)"]
-    browser["ブラウザ<br/>レジ帳簿アプリ"]
+    browser["ホーム画面のアプリ(PWA)<br/>レジ帳簿"]
     idb[("IndexedDB<br/>商品・在庫・会計・設定")]
+    sw[("サービスワーカーのキャッシュ<br/>画面のファイル・Excel の部品・フォント")]
     browser <--> idb
+    browser <--> sw
   end
 
-  cf -- "開いたとき・更新したときだけ" --> browser
+  cf -- "最初に開いたとき・新しい版があるときだけ" --> sw
   browser -- "Excel・バックアップ" --> files["端末のファイル<br/>ファイルアプリ・フォルダ"]
   dev -. "開発中の確認<br/>npm run dev:phone(同じ Wi-Fi)" .-> browser
 ```
@@ -31,8 +33,33 @@ flowchart LR
 |---|---|---|
 | 画面 | React + TypeScript(Vite でビルド) | 実装中 |
 | データの保存 | IndexedDB(Dexie.js で操作) | 実装中 |
-| 画面のファイルの配信 | Cloudflare Pages | 予定 |
+| 画面のファイルの配信 | Cloudflare Pages(無料プラン) | 公開済み |
+| ホーム画面のアプリ・オフライン | vite-plugin-pwa(サービスワーカー) | 実装済み |
 | Excel の出力 | ExcelJS | 実装中 |
+
+### 新しい版の届き方(PWA)
+
+会計の途中で画面が入れ替わらないように、新しい版は**自動では入れ替えず**、オーナーが「更新する」を押したときに入れ替えます。
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor dev as 開発(PC)
+  participant cf as Cloudflare Pages
+  participant sw as サービスワーカー(iPhone)
+  participant app as レジ帳簿の画面
+  actor owner as オーナー
+
+  dev->>cf: main にプッシュ → 自動でビルドして公開
+  sw->>cf: アプリを開いたとき・開いたままなら1時間ごとに確かめる
+  cf-->>sw: 新しい版のファイル
+  sw->>sw: 裏で保存しておく(今の画面はそのまま)
+  sw-->>app: 新しい版がある
+  app-->>owner: 「新しい版があります」(カートに商品があれば、消えることも書く)
+  owner->>app: 会計が終わってから「更新する」
+  app->>sw: 入れ替えて読み込み直す
+  Note over sw,app: 電波がないときは、保存してある版でそのまま動く
+```
 
 ---
 
@@ -298,4 +325,4 @@ sequenceDiagram
 | 11 | 帳簿と Excel 出力 | `src/db/ledger.ts`、`src/lib/ledgerExcel.ts`、`src/components/ledger/*` | ✅ |
 | 12 | 設定(暗証番号、バックアップ、古いデータの削除) | `src/db/pin.ts`、`src/db/backup.ts`、`src/db/purge.ts`、`src/components/pin/*`、`src/components/settings/*`、`PurgeDialog.tsx` | ✅ |
 | 13 | スマホ対応(仕様書 §10.1) | `AppShell`、各画面の `*.module.css`(幅 760px 以下の指定)、`src/lib/id.ts` | ✅ |
-| 14 | PWA と実機での確認 | | ⬜ |
+| 14 | PWA と実機での確認 | `vite.config.ts`、`public/_headers`、`public/*.png`、`UpdatePrompt.tsx`、`install/*`、`src/lib/install.ts` | 🔶 PWA は実装済み。iPhone の実機での確認はこれから |

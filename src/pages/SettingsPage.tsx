@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { Link } from 'react-router'
+import InstallSteps from '../components/install/InstallSteps'
 import PinDialog, { type PinAction } from '../components/settings/PinDialog'
 import RestoreDialog from '../components/settings/RestoreDialog'
 import { BACKUP_DESTINATION_HINT, useBackupDownload } from '../components/useBackupDownload'
@@ -8,6 +9,7 @@ import { parseBackup, type BackupFile } from '../db/backup'
 import { db } from '../db/db'
 import { userMessage } from '../db/errors'
 import { getSetting, setTaxRate } from '../db/settings'
+import { currentInstallEnv, isIOS, isStandalone } from '../lib/install'
 import { PIN_UNSUPPORTED_MESSAGE, pinSupported } from '../lib/pin'
 import { formatBytes, getStorageStatus, requestPersistentStorage, type StorageStatus } from '../lib/storage'
 import { formatDateTime } from '../lib/time'
@@ -25,6 +27,9 @@ async function loadSettings() {
 /** 設定(仕様書 §5 設定画面)。暗証番号、バックアップと復元、データの保存状態、税率、バージョン */
 export default function SettingsPage() {
   const settings = useLiveQuery(loadSettings, [])
+  const installEnv = currentInstallEnv()
+  const standalone = isStandalone(installEnv)
+  const ios = isIOS(installEnv)
 
   // ---------- 暗証番号 ----------
   const [pinAction, setPinAction] = useState<PinAction | null>(null)
@@ -181,6 +186,25 @@ export default function SettingsPage() {
         </section>
 
         {/* ---------- データの保存状態 ---------- */}
+        {/* ---------- ホーム画面のアプリ(PWA) ---------- */}
+        <section className="panel" aria-labelledby="install-heading">
+          <div className={styles.head}>
+            <h3 id="install-heading" className={styles.heading}>
+              ホーム画面のアプリ
+            </h3>
+            <span className={standalone ? 'badge badge-good' : 'badge badge-warn'}>
+              {standalone ? 'ホーム画面から開いています' : 'ブラウザで開いています'}
+            </span>
+          </div>
+          {standalone ? (
+            <p className="hint">アプリとして開いています。電波がなくても使えます。新しい版が届いたら、画面の上でお知らせします。</p>
+          ) : ios ? (
+            <InstallSteps />
+          ) : (
+            <p className="hint">お店では iPhone のホーム画面に追加して使います。PC のブラウザでは、確認用として開いています。</p>
+          )}
+        </section>
+
         <section className="panel" aria-labelledby="storage-heading">
           <h3 id="storage-heading" className={styles.heading}>
             データの保存状態
