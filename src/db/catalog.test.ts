@@ -117,6 +117,44 @@ describe('商品の登録', () => {
   })
 })
 
+describe('サイズと色の書き方をそろえる', () => {
+  it('全角の英数字や余分な空白は直して保存し、在庫も同じ組み合わせに入る', async () => {
+    const tops = await addCategory(db, 'トップス')
+    await saveProduct(
+      db,
+      shirt(tops, { sizes: ['Ｓ', ' M '], colors: ['ライト　ブルー'], stocks: [{ size: 'Ｓ', color: 'ライト　ブルー', stock: 4 }] }),
+    )
+    const p = (await loadCatalog(db)).products[0]
+    expect(p.sizes).toEqual(['S', 'M'])
+    expect(p.colors).toEqual(['ライト ブルー'])
+    // 小文字のサイズも大文字で保存する
+    const id2 = await saveProduct(db, shirt(tops, { name: 'パンツ', sizes: ['l', 'w30'] }))
+    expect((await loadCatalog(db)).products.find((x) => x.id === id2)!.sizes).toEqual(['L', 'W30'])
+    expect(p.variants.find((v) => v.size === 'S')?.stock).toBe(4)
+  })
+
+  it('全角と半角、大文字と小文字だけが違うものは重なりとして止める。長すぎる名前も止める', async () => {
+    const tops = await addCategory(db, 'トップス')
+    await expect(saveProduct(db, shirt(tops, { sizes: ['M', 'Ｍ'] }))).rejects.toThrow('サイズ「M」が重なっています')
+    await expect(saveProduct(db, shirt(tops, { sizes: ['m', 'M'] }))).rejects.toThrow('重なっています')
+    await expect(saveProduct(db, shirt(tops, { colors: ['あ'.repeat(21)] }))).rejects.toThrow('20文字まで')
+    expect(await db.products.count()).toBe(0)
+  })
+
+  it('前に全角で登録したサイズは、そろえた名前に直して同じバリエーションを使い続ける(売上とのつながりが残る)', async () => {
+    const tops = await addCategory(db, 'トップス')
+    const id = await saveProduct(db, shirt(tops, { sizes: ['M'], colors: ['白'], stocks: [{ size: 'M', color: '白', stock: 3 }] }))
+    // 前の版で全角のまま保存されていたことにする
+    const v = (await db.variants.where('productId').equals(id).first())!
+    await db.variants.update(v.id, { size: 'Ｍ' })
+
+    await saveProduct(db, shirt(tops, { sizes: ['M'], colors: ['白'], stocks: [{ size: 'Ｍ', color: '白', stock: 3 }] }), id)
+    const variants = await db.variants.where('productId').equals(id).toArray()
+    expect(variants).toHaveLength(1)
+    expect(variants[0]).toMatchObject({ id: v.id, size: 'M', stock: 3, isActive: true })
+  })
+})
+
 describe('商品の編集', () => {
   it('サイズを減らすとそのバリエーションは論理削除され、戻すと同じものを使い直す', async () => {
     const tops = await addCategory(db, 'トップス')

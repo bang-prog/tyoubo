@@ -1,0 +1,120 @@
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.label {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.count {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* 選んでいるもの */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding-left: 12px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-weight: 700;
+}
+
+.chip button {
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 999px;
+  color: inherit;
+  font-size: 18px;
+}
+
+/* 候補 */
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.groupLabel {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.candidates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.candidate {
+  min-width: 48px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 15px;
+}
+
+.candidate[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.addButton {
+  align-self: flex-start;
+}
+
+.addRow {
+  display: flex;
+  gap: 8px;
+}
+
+.addRow :global(.input) {
+  flex: 1;
+  min-width: 0;
+}
+
+.error {
+  margin: 0;
+  color: var(--bad);
+  font-size: 13px;
+}

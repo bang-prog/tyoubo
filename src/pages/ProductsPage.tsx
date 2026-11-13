@@ -5,6 +5,7 @@ import ProductForm from '../components/products/ProductForm'
 import ProductList from '../components/products/ProductList'
 import { loadCatalog } from '../db/catalog'
 import { db } from '../db/db'
+import { usedOptionsOf } from '../lib/variantOptions'
 import styles from './ProductsPage.module.css'
 
 /** 選んでいるもの:商品の id、新しい商品('new')、なにも選んでいない(null) */
@@ -28,6 +29,8 @@ export default function ProductsPage() {
     for (const p of catalog?.products ?? []) counts.set(p.categoryId, (counts.get(p.categoryId) ?? 0) + 1)
     return counts
   }, [catalog])
+  // ほかの商品で使ったサイズと色(商品の入力欄で候補に出す)
+  const used = useMemo(() => usedOptionsOf(catalog?.products ?? []), [catalog])
 
   if (!catalog) {
     return (
@@ -74,6 +77,7 @@ export default function ProductsPage() {
               key={product?.id ?? 'new'}
               categories={catalog.categories}
               product={product}
+              used={used}
               notice={flash}
               onSaved={(id) => {
                 setSelected(id)

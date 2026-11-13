@@ -5,12 +5,16 @@ import { userMessage } from '../../db/errors'
 import type { Category } from '../../db/types'
 import { sizeLabel } from '../../lib/labels'
 import { formatYen, splitTax } from '../../lib/money'
+import { canonicalOption, hasOption, optionKey, sortSizes, type OptionKind } from '../../lib/variantOptions'
+import OptionPicker from './OptionPicker'
 import styles from './ProductForm.module.css'
 
 type Props = {
   categories: Category[]
   /** 編集する商品。なければ新しい商品 */
   product?: ProductView
+  /** ほかの商品で使ったサイズと色(候補に出す) */
+  used: { sizes: string[]; colors: string[] }
   /** 保存したあとの「保存しました」 */
   notice: string | null
   onSaved: (id: string) => void
@@ -18,11 +22,14 @@ type Props = {
   onCancel: () => void
 }
 
-const stockKey = (size: string, color: string) => `${size}\u0000${color}`
+/** 在庫を覚えておくキー。全角・半角や大文字・小文字の違いは同じものとして扱う(保存のときと同じ) */
+const stockKey = (size: string, color: string) => `${optionKey(size)}\u0000${optionKey(color)}`
 
-/** 「S, M、L」→ ['S', 'M', 'L']。カンマと読点のどちらで区切ってもよい */
-function splitList(text: string): string[] {
-  return [...new Set(text.split(/[,、]/).map((s) => s.trim()).filter(Boolean))]
+/** 登録済みの名前をそろえ、書き方だけが違うものは1つにする */
+function cleanNames(names: string[], kind: OptionKind): string[] {
+  const out: string[] = []
+  for (const n of names.map((name) => canonicalOption(name, kind))) if (n && !hasOption(out, n)) out.push(n)
+  return out
 }
 
 /** 空なら null。数字以外が入っていても null */
@@ -32,15 +39,16 @@ function toInt(text: string): number | null {
 }
 
 /** 商品の登録・編集フォーム。 */
-export default function ProductForm({ categories, product, notice, onSaved, onDeleted, onCancel }: Props) {
+export default function ProductForm({ categories, product, used, notice, onSaved, onDeleted, onCancel }: Props) {
   // 入力中の値は文字列で持ち、保存するときに数値にする
   const [name, setName] = useState(product?.name ?? '')
   const [categoryId, setCategoryId] = useState(product?.categoryId ?? categories[0]?.id ?? '')
   const [price, setPrice] = useState(product ? String(product.priceIncl) : '')
   const [cost, setCost] = useState(product ? String(product.cost) : '')
-  const [sizesText, setSizesText] = useState(product ? product.sizes.join(', ') : 'S, M, L')
-  const [colorsText, setColorsText] = useState(product ? product.colors.join(', ') : '')
-  // 在庫は「サイズと色の名前」で覚えておく。サイズや色を打ち直しても、同じ名前に戻せば数が残る
+  // サイズは決まった順(XS → S → M …)、色は選んだ順。新しい商品はよく使う S・M・L を最初から選んでおく
+  const [sizes, setSizes] = useState<string[]>(() => (product ? sortSizes(cleanNames(product.sizes, 'size')) : ['S', 'M', 'L']))
+  const [colors, setColors] = useState<string[]>(() => (product ? cleanNames(product.colors, 'color') : []))
+  // 在庫は「サイズと色の名前」で覚えておく。サイズや色を外しても、同じ名前に戻せば数が残る
   const [stocks, setStocks] = useState<Record<string, string>>(() =>
     Object.fromEntries((product?.variants ?? []).map((v) => [stockKey(v.size, v.color), String(v.stock)])),
   )
@@ -51,8 +59,10 @@ export default function ProductForm({ categories, product, notice, onSaved, onDe
   // 選んでいるカテゴリーが一覧にないとき(入力欄を開いたあとにカテゴリーを追加・削除したとき)は、
   // 選択欄に見えている先頭のカテゴリーを使う。見た目と保存する値を食い違わせないため
   const selectedCategoryId = categories.some((c) => c.id === categoryId) ? categoryId : (categories[0]?.id ?? '')
-  const sizes = splitList(sizesText)
-  const colors = splitList(colorsText)
+  // 外したサイズや色に在庫が残っているときは知らせる(保存すると、その組み合わせは会計の画面に出なくなる)
+  const removedWithStock = (product?.variants ?? []).filter(
+    (v) => v.stock !== 0 && !(hasOption(sizes, v.size) && hasOption(colors, v.color)),
+  )
   const priceNum = toInt(price)
   const breakdown = priceNum !== null && priceNum > 0 ? splitTax(priceNum) : null
 
@@ -160,18 +170,9 @@ export default function ProductForm({ categories, product, notice, onSaved, onDe
         </label>
       </div>
 
-      <div className={styles.two}>
-        <label className={styles.field}>
-          サイズ
-          <input className="input" value={sizesText} onChange={(e) => setSizesText(e.target.value)} placeholder="例:S, M, L" />
-          <span className={styles.help}>カンマで区切る(F はフリー)</span>
-        </label>
-        <label className={styles.field}>
-          色
-          <input className="input" value={colorsText} onChange={(e) => setColorsText(e.target.value)} placeholder="例:白, 黒" />
-          <span className={styles.help}>カンマで区切る</span>
-        </label>
-      </div>
+      {/* サイズと色は候補をタップして選び、候補にないものは1つずつ追加する */}
+      <OptionPicker kind="size" selected={sizes} used={used.sizes} onChange={setSizes} />
+      <OptionPicker kind="color" selected={colors} used={used.colors} onChange={setColors} />
 
       <div className={styles.field}>
         在庫数
@@ -215,9 +216,17 @@ export default function ProductForm({ categories, product, notice, onSaved, onDe
             </table>
           </div>
         ) : (
-          <span className={styles.help}>サイズと色を入れると、在庫数の表が出ます。</span>
+          <span className={styles.help}>サイズと色を選ぶと、在庫数の表が出ます。</span>
         )}
       </div>
+
+      {removedWithStock.length > 0 && (
+        <p className={styles.warn}>
+          外したサイズ・色に在庫があります:
+          {removedWithStock.map((v) => `${v.color} / ${sizeLabel(v.size)}(${v.stock}点)`).join('、')}
+          。保存すると、この組み合わせは会計の画面に出なくなります。同じサイズ・色を選び直せば、在庫も元に戻ります。
+        </p>
+      )}
 
       {error && <p className="error">{error}</p>}
 

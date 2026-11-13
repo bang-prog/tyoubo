@@ -3,11 +3,13 @@
 import { newId } from '../lib/id'
 import { MAX_RECEIVED } from '../lib/money'
 import { nowIso } from '../lib/time'
+import { canonicalOption, hasOption, MAX_OPTION_LENGTH, MAX_OPTIONS, optionKey, type OptionKind } from '../lib/variantOptions'
 import type { AppDB } from './db'
 import { ValidationError } from './errors'
 import type { Category, Product, Variant } from './types'
 
-const variantKey = (size: string, color: string) => `${size}\u0000${color}`
+/** サイズと色の組み合わせのキー。全角・半角や大文字・小文字の違いは同じものとして扱う */
+const variantKey = (size: string, color: string) => `${optionKey(size)}\u0000${optionKey(color)}`
 
 function cleanName(value: string, label: string): string {
   const name = value.trim()
@@ -86,15 +88,22 @@ function checkPrice(value: number, label: string): void {
   }
 }
 
-function cleanList(values: string[], label: string): string[] {
+/**
+ * サイズや色の一覧をそろえる。全角の英数字や余分な空白は直し、決まった書き方のあるサイズは大文字にする(canonicalOption)。
+ * 大文字・小文字だけが違うもの(「m」と「M」)は同じものとして重なりを見つける。
+ */
+function cleanList(values: string[], kind: OptionKind): string[] {
+  const label = kind === 'size' ? 'サイズ' : '色'
   const out: string[] = []
   for (const value of values) {
-    const v = value.trim()
+    const v = canonicalOption(value, kind)
     if (!v) continue
-    if (out.includes(v)) throw new ValidationError(`${label}「${v}」が重なっています`)
+    if (v.length > MAX_OPTION_LENGTH) throw new ValidationError(`${label}「${v}」は${MAX_OPTION_LENGTH}文字までにしてください`)
+    if (hasOption(out, v)) throw new ValidationError(`${label}「${v}」が重なっています`)
     out.push(v)
   }
   if (out.length === 0) throw new ValidationError(`${label}を1つ以上入力してください`)
+  if (out.length > MAX_OPTIONS[kind]) throw new ValidationError(`${label}は${MAX_OPTIONS[kind]}個までです`)
   return out
 }
 
@@ -106,14 +115,14 @@ export async function saveProduct(db: AppDB, input: ProductInput, id?: string): 
   const name = cleanName(input.name, '商品名')
   checkPrice(input.priceIncl, '販売価格')
   checkPrice(input.cost, '仕入価格')
-  const sizes = cleanList(input.sizes, 'サイズ')
-  const colors = cleanList(input.colors, '色')
+  const sizes = cleanList(input.sizes, 'size')
+  const colors = cleanList(input.colors, 'color')
   const stockOf = new Map<string, number>()
   for (const s of input.stocks) {
     if (!Number.isSafeInteger(s.stock)) {
       throw new ValidationError(`在庫数(${s.color} / ${s.size})は整数で入力してください`)
     }
-    stockOf.set(variantKey(s.size.trim(), s.color.trim()), s.stock)
+    stockOf.set(variantKey(s.size, s.color), s.stock)
   }
 
   return db.transaction('rw', db.categories, db.products, db.variants, async () => {
@@ -131,23 +140,34 @@ export async function saveProduct(db: AppDB, input: ProductInput, id?: string): 
     }
 
     const existingVariants = await db.variants.where('productId').equals(productId).toArray()
-    const byKey = new Map(existingVariants.map((v) => [variantKey(v.size, v.color), v]))
-    const keep = new Set<string>()
+    // 書き方だけが違う同じ組み合わせ(「Ｍ」と「M」など)が前から2つあるときは、使っている方を選ぶ
+    const byKey = new Map<string, Variant>()
+    for (const v of existingVariants) {
+      const key = variantKey(v.size, v.color)
+      const other = byKey.get(key)
+      if (!other || (v.isActive && !other.isActive)) byKey.set(key, v)
+    }
+    /** 使い続けるバリエーションの id */
+    const kept = new Set<string>()
     for (const [colorOrder, color] of colors.entries()) {
       for (const [sizeOrder, size] of sizes.entries()) {
         const key = variantKey(size, color)
-        keep.add(key)
         const stock = stockOf.get(key) ?? 0
         const found = byKey.get(key)
         if (found) {
-          await db.variants.update(found.id, { stock, sizeOrder, colorOrder, isActive: true })
+          kept.add(found.id)
+          // 名前の書き方(全角・半角など)が変わっていたら、そろえた名前に直す。ほかの行がもうその名前なら、重なるので直さない。
+          // 過去の売上は会計時の名前を書き写しているので変わらない
+          const taken = existingVariants.some((o) => o.id !== found.id && o.size === size && o.color === color)
+          const names = taken ? {} : { size, color }
+          await db.variants.update(found.id, { ...names, stock, sizeOrder, colorOrder, isActive: true })
         } else {
           await db.variants.add({ id: newId(), productId, size, color, stock, sizeOrder, colorOrder, isActive: true })
         }
       }
     }
     for (const v of existingVariants) {
-      if (v.isActive && !keep.has(variantKey(v.size, v.color))) await db.variants.update(v.id, { isActive: false })
+      if (v.isActive && !kept.has(v.id)) await db.variants.update(v.id, { isActive: false })
     }
     return productId
   })

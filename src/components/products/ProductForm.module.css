@@ -95,3 +95,13 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* 外したサイズ・色に在庫が残っているときの注意 */
+.warn {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-size: 14px;
+}
