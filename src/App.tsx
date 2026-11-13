@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router'
 import AppShell from './components/AppShell'
-import InstallGuide from './components/install/InstallGuide'
+import StartupGuides from './components/guide/StartupGuides'
 import UpdatePrompt from './components/UpdatePrompt'
 import ClosingPage from './pages/ClosingPage'
 import HistoryPage from './pages/HistoryPage'
@@ -25,9 +25,9 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
-      {/* 新しい版のお知らせと、「ホーム画面に追加」の案内(PWA) */}
+      {/* 新しい版のお知らせ(PWA)と、最初に開いたときの案内(ホーム画面に追加・使い方) */}
       <UpdatePrompt />
-      <InstallGuide />
+      <StartupGuides />
     </CartProvider>
   )
 }

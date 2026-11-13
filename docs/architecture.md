@@ -123,7 +123,7 @@ flowchart TB
 | フォルダ | 役割 | 主なファイル |
 |---|---|---|
 | `src/pages` | タブごとの画面 | `RegisterPage`、`ProductsPage`、`HistoryPage`、`ClosingPage`、`LedgerPage`、`SettingsPage` |
-| `src/components` | 画面の部品 | `AppShell`、`Modal`、`PayDialog`(電卓)、`ChangeDialog`(完了)、`register/*`、`products/*`、`pin/*`(暗証番号)、`settings/*` |
+| `src/components` | 画面の部品 | `AppShell`、`Modal`、`PayDialog`(電卓)、`ChangeDialog`(完了)、`register/*`、`products/*`、`pin/*`(暗証番号)、`settings/*`、`guide/*`(使い方の説明)、`install/*`(ホーム画面に追加の案内) |
 | `src/state` | タブを切り替えても残す状態 | `CartProvider`(カート) |
 | `src/db` | データの保存・読み込み。入力のチェックとトランザクションもここ | `db.ts`、`catalog.ts`、`sales.ts`、`settings.ts`、`pin.ts`、`backup.ts`、`purge.ts`、`errors.ts` |
 | `src/lib` | 計算だけの関数 | `money.ts`、`cashInput.ts`、`cart.ts`、`time.ts`、`labels.ts`、`payment.ts`(支払い方法)、`id.ts`(id を作る)、`pin.ts`(ハッシュ化)、`storage.ts`(保存状態) |

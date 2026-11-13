@@ -1,42 +1,16 @@
-import { useState } from 'react'
-import { currentInstallEnv, shouldShowInstallGuide } from '../../lib/install'
+import { rememberInstallGuideClosed } from '../../lib/install'
 import Modal from '../Modal'
 import InstallSteps from './InstallSteps'
 import styles from './InstallGuide.module.css'
 
-/** 「表示しない」を押したら、この端末では二度と出さない */
-const DISMISS_KEY = 'tyoubo-install-guide-dismissed'
-/** 「あとで」を押したら、このタブ(Safari)を閉じるまで出さない */
-const LATER_KEY = 'tyoubo-install-guide-later'
-
-function wasDismissed(): boolean {
-  try {
-    return localStorage.getItem(DISMISS_KEY) === '1' || sessionStorage.getItem(LATER_KEY) === '1'
-  } catch {
-    return false
-  }
-}
-
-function remember(storage: 'local' | 'session') {
-  try {
-    if (storage === 'local') localStorage.setItem(DISMISS_KEY, '1')
-    else sessionStorage.setItem(LATER_KEY, '1')
-  } catch {
-    // 覚えておけなくても、閉じることはできる
-  }
-}
-
 /**
  * iPhone・iPad の Safari のタブで開いたときに、「ホーム画面に追加」の手順を案内する(仕様書 §9)。
- * ホーム画面から開いているときと、PC では出さない。
+ * ホーム画面から開いているときと、PC では出さない(出すかどうかは installGuideNeeded で決める)。
  */
-export default function InstallGuide() {
-  const [open, setOpen] = useState(() => shouldShowInstallGuide(currentInstallEnv()) && !wasDismissed())
-  if (!open) return null
-
+export default function InstallGuide({ onClose }: { onClose: () => void }) {
   function close(storage: 'local' | 'session') {
-    remember(storage)
-    setOpen(false)
+    rememberInstallGuideClosed(storage)
+    onClose()
   }
 
   return (

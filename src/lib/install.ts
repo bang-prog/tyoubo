@@ -37,3 +37,33 @@ export function currentInstallEnv(): InstallEnv {
     navigatorStandalone: (navigator as Navigator & { standalone?: boolean }).standalone,
   }
 }
+
+// ---------- 最初に開いたときの案内を出したか ----------
+
+/** 「表示しない」を押したら、この端末では二度と出さない */
+const DISMISS_KEY = 'tyoubo-install-guide-dismissed'
+/** 「あとで」を押したら、このタブ(Safari)を閉じるまで出さない */
+const LATER_KEY = 'tyoubo-install-guide-later'
+
+/** 最初に開いたときに「ホーム画面に追加」の案内を出すか */
+export function installGuideNeeded(): boolean {
+  return shouldShowInstallGuide(currentInstallEnv()) && !wasDismissed()
+}
+
+function wasDismissed(): boolean {
+  try {
+    return localStorage.getItem(DISMISS_KEY) === '1' || sessionStorage.getItem(LATER_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+/** 案内を閉じたことを覚える。local:この端末では二度と出さない / session:このタブを閉じるまで出さない */
+export function rememberInstallGuideClosed(storage: 'local' | 'session'): void {
+  try {
+    if (storage === 'local') localStorage.setItem(DISMISS_KEY, '1')
+    else sessionStorage.setItem(LATER_KEY, '1')
+  } catch {
+    // 覚えておけなくても、閉じることはできる
+  }
+}

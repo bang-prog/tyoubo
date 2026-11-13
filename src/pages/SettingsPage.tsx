@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { Link } from 'react-router'
+import UsageGuide from '../components/guide/UsageGuide'
 import InstallSteps from '../components/install/InstallSteps'
 import PinDialog, { type PinAction } from '../components/settings/PinDialog'
 import RestoreDialog from '../components/settings/RestoreDialog'
@@ -27,6 +28,8 @@ async function loadSettings() {
 /** 設定(仕様書 §5 設定画面)。暗証番号、バックアップと復元、データの保存状態、税率、バージョン */
 export default function SettingsPage() {
   const settings = useLiveQuery(loadSettings, [])
+  /** 使い方の説明を開いているか */
+  const [guideOpen, setGuideOpen] = useState(false)
   const installEnv = currentInstallEnv()
   const standalone = isStandalone(installEnv)
   const ios = isIOS(installEnv)
@@ -105,6 +108,19 @@ export default function SettingsPage() {
       <h2 className={styles.title}>設定</h2>
 
       <div className={styles.sections}>
+        {/* ---------- 使い方 ---------- */}
+        <section className="panel" aria-labelledby="guide-heading">
+          <h3 id="guide-heading" className={styles.heading}>
+            使い方
+          </h3>
+          <p className="hint">商品の登録、会計、返品、レジ締め、帳簿の出し方、データの守り方を順に説明します。</p>
+          <div className={styles.buttons}>
+            <button type="button" className="btn btn-primary" onClick={() => setGuideOpen(true)}>
+              使い方を見る
+            </button>
+          </div>
+        </section>
+
         {/* ---------- 暗証番号(F6) ---------- */}
         <section className="panel" aria-labelledby="pin-heading">
           <div className={styles.head}>
@@ -296,6 +312,8 @@ export default function SettingsPage() {
           </dl>
         </section>
       </div>
+
+      {guideOpen && <UsageGuide onClose={() => setGuideOpen(false)} />}
 
       {pinAction && (
         <PinDialog
